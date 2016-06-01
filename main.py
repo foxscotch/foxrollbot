@@ -37,7 +37,7 @@ class DiceRoll:
         else:
             sign = '+'
 
-        match = DiceRoll.syntax_regex.match(roll_str)
+        match = DiceRoll.syntax_regex.fullmatch(roll_str)
 
         if match:
             try:
@@ -99,7 +99,7 @@ class CompleteRoll:
             else:
                 raise InvalidSyntaxException('Invalid advantage argument.')
 
-        if CompleteRoll.syntax_regex.match(args[0]):
+        if CompleteRoll.syntax_regex.fullmatch(args[0]):
             parts = re.split('[+-](?=[+-])', re.sub('([+-])', '\g<1>\g<1>', args[0]))
             rolls = []
             modifiers = []
