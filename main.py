@@ -23,15 +23,22 @@ class OutOfRangeException(Exception):
 
 
 class DiceRoll:
-    syntax_regex = re.compile('(\d{1,3})d(\d{1,4})')
+    syntax_regex = re.compile('[+-]?(\d{1,3})d(\d{1,4})')
 
-    def __init__(self, qty, die):
+    def __init__(self, qty, die, negative=False):
         self.qty = qty
         self.die = die
+        self.negative = negative
 
     @staticmethod
     def from_str(roll_str):
-        match = re.match(DiceRoll.syntax_regex, roll_str)
+        if roll_str.startswith('+') or roll_str.startswith('-'):
+            sign, roll_str = roll_str[0], roll_str[1:]
+        else:
+            sign = '+'
+
+        match = DiceRoll.syntax_regex.match(roll_str)
+
         if match:
             try:
                 qty = int(match.group(1))
@@ -42,70 +49,92 @@ class DiceRoll:
                 if die < 1 or die > 1000:
                     raise OutOfRangeException('Number of sides must be between 1 and 1000.')
 
-                return DiceRoll(qty, die)
+                return DiceRoll(qty, die, sign == '-')
             except ValueError as e:
                 # I can't imagine this will ever happen, because the regex
                 # should prevent any non-numbers. But, you know, just in case.
                 raise NotANumberException('Both the number of dice and number of sides must be numbers.')
         else:
-            raise InvalidSyntaxException()
+            raise InvalidSyntaxException('Invalid syntax')
 
     def roll(self):
         results = []
         for i in range(self.qty):
             results.append(random.randint(1, self.die))
-        return RollResult(self.qty, self.die, results)
+        return RollResult(self.qty, self.die, results, self.negative)
 
     def __str__(self):
         return '{0}d{1}'.format(self.qty, self.die)
 
 
 class RollResult:
-    def __init__(self, qty, die, results):
+    def __init__(self, qty, die, results, negative):
         self.qty = qty
         self.die = die
         self.results = results
+        self.negative = negative
 
     def __str__(self):
-        return '{0}d{1}: | {2}'.format(self.qty, self.die, ', '.join(self.results))
+        return '{0}d{1}: {2} | {3}'.format(self.qty, self.die, sum(self.results), ', '.join(map(lambda x: str(x), self.results)))
 
 
 class CompleteRoll:
-    syntax_regex = re.compile('(\d{1,3}d\d{1,4})(\+(\d{1,3}d\d{1,4}|\d{1,3}))*')
+    syntax_regex = re.compile('(\d{1,3}d\d{1,4})([+-](\d{1,3}d\d{1,4}|\d{1,3}))*')
 
-    def __init__(self, rolls):
-        pass
+    def __init__(self, rolls, modifiers):
+        self.rolls = rolls
+        self.modifiers = modifiers
 
     @staticmethod
-    def from_args(self, arg_list):
+    def from_args(args):
         if len(args) >= 3 or len(args) == 0:
             raise InvalidSyntaxException('Improper number of arguments.')
 
         adv = 0
-        if len(arg_list) == 2:
-            if 'advantage'.startswith(arg_list[1]):
+        if len(args) == 2:
+            if 'advantage'.startswith(args[1]):
                 adv = 1
-            elif 'disadvantage'.startswith(arg_list[1]):
+            elif 'disadvantage'.startswith(args[1]):
                 adv = -1
             else:
                 raise InvalidSyntaxException('Invalid advantage argument.')
 
+        if CompleteRoll.syntax_regex.match(args[0]):
+            parts = re.split('[+-](?=[+-])', re.sub('([+-])', '\g<1>\g<1>', args[0]))
+            rolls = []
+            modifiers = []
+
+            for part in parts:
+                match = DiceRoll.syntax_regex.match(part)
+                if match:
+                    rolls.append(DiceRoll.from_str(part))
+                else:
+                    modifiers.append(int(part))
+
+            return CompleteRoll(rolls, modifiers)
+        else:
+            raise InvalidSyntaxException('Invalid syntax')
+
     def roll(self):
-        pass
+        results = []
+        for roll in self.rolls:
+            results.append(roll.roll())
+        return CompleteRollResult(results, self.modifiers)
 
 
 class CompleteRollResult:
-    def __init__(self, rolls, total, modifiers, mod_total):
+    def __init__(self, rolls, modifiers):
         self.rolls = rolls
-        self.total = total
+        self.roll_total = sum([-sum(roll.results) if roll.negative else sum(roll.results) for roll in rolls])
         self.modifiers = modifiers
-        self.mod_total = mod_total
+        self.mod_total = sum(modifiers)
+        self.total = self.roll_total + self.mod_total
 
     def __str__(self):
         total = 'Total: {0}\n'.format(self.total)
-        roll_results = ''
-        for roll in self.rolls:
-            roll_results += str(roll) + '\n'
+        roll_results = '\n'.join(map(lambda x: str(x), self.rolls)) + '\n'
+        mod_total = 'Modifier total: {0}'.format(self.mod_total)
+        return total + roll_results + mod_total
 
 
 def start(bot, update):
@@ -121,7 +150,8 @@ def roll(bot, update, args):
     }
 
     try:
-        pass
+        roll = CompleteRoll.from_args(args)
+        msg_args['text'] = str(roll.roll())
     except InvalidSyntaxException as e:
         msg_args['text'] = 'Syntax: /roll <rolls>d<die>+[roll/modifier]+[etc] [dis/adv]'
     except (NotANumberException, OutOfRangeException) as e:
