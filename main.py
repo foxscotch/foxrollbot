@@ -75,7 +75,7 @@ class DiceRoll:
                 # should prevent any non-numbers. But, you know, just in case.
                 raise NotANumberException('Both the number of dice and number of sides must be numbers.')
         else:
-            raise InvalidSyntaxException('Invalid syntax')
+            raise InvalidSyntaxException()
 
     def roll(self):
         results = []
@@ -129,9 +129,12 @@ class CompleteRoll:
                     else:
                         modifiers.append(int(part))
 
+            if len(rolls) == 0:
+                raise InvalidSyntaxException()
+
             return CompleteRoll(rolls, modifiers)
         else:
-            raise InvalidSyntaxException('Invalid syntax')
+            raise InvalidSyntaxException()
 
     def roll(self):
         results = []
@@ -203,8 +206,6 @@ def help(bot, update):
 
 
 def roll(bot, update, args):
-    print('YEP, ROLLING')
-
     msg_args = {
         'chat_id': update.message.chat_id,
         'reply_to_message_id': update.message.message_id,
@@ -227,9 +228,9 @@ def roll(bot, update, args):
         for arg in args:
             if arg[0].isdigit():
                 if len(parts) > 1:
-                    rolls.append(cur_part.copy())
                     cur_part = base_part.copy()
-                
+
+                parts.append(cur_part)
                 cur_part['roll'] = CompleteRoll.from_str(arg)
             else:
                 if 'advantage'.startswith(arg):
@@ -256,7 +257,7 @@ def roll(bot, update, args):
                     else:
                         result_str += str(r2)
                         result_str += '\nOther roll: {0}'.format(r1.total)
-                if part['dis']:
+                elif part['dis']:
                     if r1.total <= r2.total:
                         result_str += str(r1)
                         result_str += '\nOther roll: {0}'.format(r2.total)
@@ -275,6 +276,10 @@ def roll(bot, update, args):
     bot.send_message(**msg_args)
 
 
+def error_callback(bot, update, error):
+    logging.error(error)
+
+
 if __name__ == '__main__':
     updater = Updater(token)
     dispatcher = updater.dispatcher
@@ -283,6 +288,8 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler('about', about))
     dispatcher.add_handler(CommandHandler('help', help))
     dispatcher.add_handler(RollCommandHandler('roll', roll, pass_args=True))
+
+    dispatcher.add_error_handler(error_callback)
 
     #updater.start_webhook('127.0.0.1', 6969, token,
     #    webhook_url='https://bot.foxscotch.us/' + token)
