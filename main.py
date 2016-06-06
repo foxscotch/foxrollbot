@@ -12,18 +12,24 @@ with open('token.txt') as token_file:
     token = token_file.read().strip()
 
 
-class InvalidSyntaxException(Exception):
+class FoxRollBotException(Exception):
     pass
 
-class NotANumberException(Exception):
+class InvalidSyntaxException(FoxRollBotException):
     pass
 
-class OutOfRangeException(Exception):
+class NotANumberException(FoxRollBotException):
+    pass
+
+class OutOfRangeException(FoxRollBotException):
+    pass
+
+class TooManyPartsException(FoxRollBotException):
     pass
 
 
 class DiceRoll:
-    syntax_regex = re.compile('[+-]?(\d{1,3})d(\d{1,4})')
+    syntax_regex = re.compile('[+-]?(\d+)d(\d+)')
 
     def __init__(self, qty, die, negative=False):
         self.qty = qty
@@ -79,7 +85,7 @@ class RollResult:
 
 
 class CompleteRoll:
-    syntax_regex = re.compile('(\d{1,3}d\d{1,4})([+-](\d{1,3}d\d{1,4}|\d{1,3}))*')
+    syntax_regex = re.compile('(\d+d\d+)([+-](\d+d\d+|\d+))*')
 
     def __init__(self, rolls, modifiers):
         self.rolls = rolls
@@ -104,12 +110,19 @@ class CompleteRoll:
             rolls = []
             modifiers = []
 
+            if len(parts) > 25:
+                raise TooManyPartsException('A roll may only have up to 25 parts.')
+
             for part in parts:
                 match = DiceRoll.syntax_regex.match(part)
                 if match:
                     rolls.append(DiceRoll.from_str(part))
                 else:
-                    modifiers.append(int(part))
+                    num = int(part)
+                    if num > 1000:
+                        raise OutOfRangeException('Modifiers must be between 1 and 1000.')
+                    else:
+                        modifiers.append(int(part))
 
             return CompleteRoll(rolls, modifiers)
         else:
@@ -154,7 +167,7 @@ def roll(bot, update, args):
         msg_args['text'] = str(roll.roll())
     except InvalidSyntaxException as e:
         msg_args['text'] = 'Syntax: /roll <rolls>d<die>+[roll/modifier]+[etc] [dis/adv]'
-    except (NotANumberException, OutOfRangeException) as e:
+    except FoxRollBotException as e:
         msg_args['text'] = str(e)
 
     bot.send_message(**msg_args)
