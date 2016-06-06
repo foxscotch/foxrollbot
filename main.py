@@ -227,12 +227,13 @@ def roll(bot, update, args):
         cur_part = base_part.copy()
         for arg in args:
             if arg[0].isdigit():
-                if len(parts) > 1:
-                    cur_part = base_part.copy()
-
+                cur_part = base_part.copy()
                 parts.append(cur_part)
                 cur_part['roll'] = CompleteRoll.from_str(arg)
             else:
+                if cur_part['roll'] is None:
+                    raise InvalidSyntaxException()
+
                 if 'advantage'.startswith(arg):
                     cur_part['adv'] = True
                 elif 'disadvantage'.startswith(arg):
