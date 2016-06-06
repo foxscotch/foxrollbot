@@ -34,12 +34,7 @@ class RollCommandHandler(CommandHandler):
     """
 
     def handle_update(self, update, dispatcher):
-        optional_args = self.collect_optional_args(dispatcher)
-
-        if self.pass_args:
-            optional_args['args'] = re.split('\s+', update.message.text)[1:]
-
-        self.callback(dispatcher.bot, update, **optional_args)
+        self.callback(dispatcher.bot, update, args=re.split('\s+', update.message.text)[1:])
 
 
 class DiceRoll:
