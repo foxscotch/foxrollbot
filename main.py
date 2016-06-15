@@ -287,6 +287,5 @@ if __name__ == '__main__':
 
     dispatcher.add_error_handler(error_callback)
 
-    #updater.start_webhook('127.0.0.1', 6969, token,
-    #    webhook_url='https://bot.foxscotch.us/' + token)
-    updater.start_polling()
+    updater.start_webhook('127.0.0.1', 6969, token,
+        webhook_url='https://bot.foxscotch.us/' + token)
