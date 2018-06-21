@@ -1,10 +1,15 @@
 # foxrollbot
 
-This is a dice-rolling bot for Telegram. To use it,
-[send it a message](https://telegram.me/foxrollbot). It'll tell you everything
-you need to know.
+This is a dice-rolling bot for Telegram. To use it, [send it a message][bot].
+It'll tell you everything you need to know.
 
-It's MIT-licensed, and requires
-[python-telegram-bot](https://python-telegram-bot.org/). I've only tested it
-with Python 3.5.1, but I'm sure it would work with any other releases of Python
-3, and it may even work with Python 2.
+After just over two years of inactivity, I've taken to reviving it a bit.
+First, I intend to just refactor code, and then I plan to add a few features,
+such as statistics and saved rolls.
+
+It's MIT-licensed, and requires [python-telegram-bot][ptb] 10.1.0. It should
+work with Python 3.6+.
+
+[bot]: https://telegram.me/foxrollbot "@foxrollbot"
+[ptb]: https://github.com/python-telegram-bot/python-telegram-bot/
+[fab]: https://github.com/fabric/fabric/ "may be needed later"
