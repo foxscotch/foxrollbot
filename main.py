@@ -21,10 +21,6 @@ for file_name in os.listdir('./text'):
         text[file_name] = f.read().strip()
 
 
-with open('token.txt') as token_file:
-    token = token_file.read().strip()
-
-
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
         text=text['start'])
@@ -118,6 +114,9 @@ def error_callback(bot, update, error):
 
 
 if __name__ == '__main__':
+    with open('token.txt') as token_file:
+        token = token_file.read().strip()
+    
     updater = Updater(token)
     dispatcher = updater.dispatcher
 
