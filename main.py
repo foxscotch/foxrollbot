@@ -1,4 +1,5 @@
 import logging
+import os
 
 from telegram.ext import CommandHandler, MessageHandler
 from telegram.ext.updater import Updater
@@ -10,8 +11,14 @@ from errors import InvalidSyntaxException,  \
                    TooManyPartsException
 
 
-logging.basicConfig(level=logging.INFO, filename='log.txt',
+logging.basicConfig(level=logging.INFO, # filename='log.txt',
                     format='%(asctime)s %(name)s %(levelname)s: %(message)s')
+
+
+text = {}
+for file_name in os.listdir('./text'):
+    with open('./text/' + file_name) as f:
+        text[file_name] = f.read().strip()
 
 
 with open('token.txt') as token_file:
@@ -20,39 +27,17 @@ with open('token.txt') as token_file:
 
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
-        text="Hi! This is a dice-rolling bot created by @foxscotch. "
-             "For help using this bot, type /help. For more info, type /about. Otherwise, use /roll to roll some dice.")
+        text=text['start'])
 
 def about(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
         parse_mode='Markdown',
-        text="As mentioned in the /start message, the bot's made by @foxscotch.\n"
-             "The bot's open source, as are most things I make, and you can see that source [on GitHub](https://github.com/foxscotch/foxrollbot). "
-             "If you have any questions, feel free to send me a message directly. I'll be happy to answer them if I can. "
-             "And if you find any bugs, either send me a message on Telegram, or open an issue on GitHub.")
+        text=text['about'])
 
 def help(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
         parse_mode='Markdown',
-        text="This bot just rolls dice. Aside from /start, /about, and /help, its only command is /roll. That command, however, is moderately complicated.\n\n"
-
-              "First of all, here's the syntax description, which you'll see if you send an invalid /roll:\n"
-              "`/roll <rolls>d<die>+[roll/modifier] [dis/adv] [x<qty>]`\n"
-              "Now, let's break that down, because it probably doesn't make a whole lot of sense right now.\n\n"
-
-              "First up we have `<rolls>d<die>`. Pretty simple, it's just a regular dice roll, like 1d20 or 2d8. Max rolls is 100, max die faces is 1000.\n"
-              "Then we have `+[roll/modifier]`. This whole thing is optional. It can be another roll like the first part, or just a plain number modifier "
-              "like 4 or 7, with a max of 1000. You can also use - instead of + to specify subtraction. You can have more than one of these sections, up to 25 total.\n"
-              "Lastly, there's `[dis/adv]`. It's probably the most confusing part. What it means is simply that you can add 'adv' or 'dis' to the roll. "
-              "'adv' or 'dis' can also just be 'a' or 'd', or in fact any amount of the words 'advantage' or 'disadvantage'. You can't use both in one roll.\n"
-              "The last bit, '[x<qty>]', should look something like 'x4' or 'x12'. It signifies that you want to roll that complete preceding roll that number of times.\n"
-              "Something the syntax description doesn't make clear is that you can have more than one _complete_ roll in one command, including those last additions.\n\n"
-
-              "For anyone who learns best by example, here's a few:\n"
-              "`/roll 1d20`\n"
-              "`/roll 1d20+2d8-4`\n"
-              "`/roll 1d6+2 adv x2`\n"
-              "`/roll 1d20 dis 2d4+6`")
+        text=text['help'])
 
 
 def roll(bot, update, args):
@@ -120,7 +105,7 @@ def roll(bot, update, args):
 
         msg_args['text'] = result_str
     except InvalidSyntaxException as e:
-        msg_args['text'] = 'Syntax: `/roll <rolls>d<die>+[roll/modifier] [dis/adv] [x<qty>]`'
+        msg_args['text'] = 'Syntax: ' + text['syntax']
         msg_args['parse_mode'] = 'Markdown'
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
