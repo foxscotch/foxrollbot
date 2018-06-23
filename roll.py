@@ -1,9 +1,14 @@
 import re
 import random
 
+from errors import InvalidSyntaxException,  \
+                   NotANumberException,     \
+                   OutOfRangeException,     \
+                   TooManyPartsException
+
 
 class DiceRoll:
-    syntax_regex = re.compile('[+-]?(\d+)d(\d+)')
+    syntax_regex = re.compile(r'[+-]?(\d+)d(\d+)')
 
     def __init__(self, qty, die, negative=False):
         self.qty = qty
@@ -44,25 +49,25 @@ class DiceRoll:
         return RollResult(self.qty, self.die, results, self.negative)
 
     def __str__(self):
-        return '{0}d{1}'.format(self.qty, self.die)
+        sign = '-' if self.negative else ''
+        return f'{sign}{self.qty}d{self.die}'
 
 
 class RollResult:
     def __init__(self, qty, die, results, negative):
         self.qty = qty
         self.die = die
-        self.results = results
         self.negative = negative
+        self.results = results
 
     def __str__(self):
-        if len(self.results) == 1:
-            return '{0}d{1}: {2}'.format(self.qty, self.die, sum(self.results))
-        else:
-            return '{0}d{1}: {2} | {3}'.format(self.qty, self.die, sum(self.results), ', '.join(map(lambda x: str(x), self.results)))
+        sep = ' | ' if self.results else ''
+        ind_results = ', '.join(map(lambda x: str(x), self.results))
+        return f'{self.qty}d{self.die}: {sum(self.results)}{sep}{ind_results}'
 
 
 class CompleteRoll:
-    syntax_regex = re.compile('(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*')
+    syntax_regex = re.compile(r'(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*')
 
     def __init__(self, rolls, modifiers):
         self.rolls = rolls
@@ -71,7 +76,7 @@ class CompleteRoll:
     @staticmethod
     def from_str(roll_str):
         if CompleteRoll.syntax_regex.fullmatch(roll_str):
-            parts = re.split('[+-](?=[+-])', re.sub('([+-])', '\g<1>\g<1>', roll_str))
+            parts = re.split(r'[+-](?=[+-])', re.sub(r'([+-])', r'\g<1>\g<1>', roll_str))
             rolls = []
             modifiers = []
 

@@ -1,0 +1,23 @@
+This bot just rolls dice. Aside from /start, /about, and /help, its only command is /roll. That command, however, is moderately complicated.
+
+
+First of all, here's the syntax description, which you'll see if you send an invalid /roll:
+`/roll <rolls>d<die>+[roll/modifier] [dis/adv] [x<qty>]`
+Now, let's break that down, because it probably doesn't make a whole lot of sense right now.
+
+First up we have `<rolls>d<die>`. Pretty simple, it's just a regular dice roll, like 1d20 or 2d8. Max rolls is 100, max die faces is 1000.
+
+Then we have `+[roll/modifier]`. This whole thing is optional. It can be another roll like the first part, or just a plain number modifier like 4 or 7, with a max of 1000. You can also use - instead of + to specify subtraction. You can have more than one of these sections, up to 25 total.
+
+Lastly, there's `[dis/adv]`. It's probably the most confusing part. What it means is simply that you can add 'adv' or 'dis' to the roll. 'adv' or 'dis' can also just be 'a' or 'd', or in fact any amount of the words 'advantage' or 'disadvantage'. You can't use both in one roll.
+
+The last bit, `[x<qty>]`, should look something like 'x4' or 'x12'. It signifies that you want to roll that complete preceding roll that number of times.
+
+Something the syntax description doesn't make clear is that you can have more than one _complete_ roll in one command, including those last additions.
+
+
+For anyone who learns best by example, here's a few:
+`/roll 1d20`
+`/roll 1d20+2d8-4`
+`/roll 1d6+2 adv x2`
+`/roll 1d20 dis 2d4+6`
