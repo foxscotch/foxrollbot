@@ -30,15 +30,17 @@ class DiceRoll:
                 die = int(match.group(2))
 
                 if qty < 1 or qty > 100:
-                    raise OutOfRangeException('Number of dice must be between 1 and 100.')
+                    raise OutOfRangeException(
+                        'Number of dice must be between 1 and 100.')
                 if die < 1 or die > 1000:
-                    raise OutOfRangeException('Number of sides must be between 1 and 1000.')
+                    raise OutOfRangeException(
+                        'Number of sides must be between 1 and 1000.')
 
                 return DiceRoll(qty, die, sign == '-')
-            except ValueError as e:
-                # I can't imagine this will ever happen, because the regex
-                # should prevent any non-numbers. But, you know, just in case.
-                raise NotANumberException('Both the number of dice and number of sides must be numbers.')
+            except ValueError:
+                # The regex should prevent any non-numbers. But just in case.
+                raise NotANumberException(
+                    'Number of dice and number of sides must be numbers.')
         else:
             raise InvalidSyntaxException()
 
@@ -76,12 +78,14 @@ class CompleteRoll:
     @staticmethod
     def from_str(roll_str):
         if CompleteRoll.syntax_regex.fullmatch(roll_str):
-            parts = re.split(r'[+-](?=[+-])', re.sub(r'([+-])', r'\g<1>\g<1>', roll_str))
+            substituted = re.sub(r'([+-])', r'\g<1>\g<1>', roll_str)
+            parts = re.split(r'[+-](?=[+-])', substituted)
             rolls = []
             modifiers = []
 
             if len(parts) > 25:
-                raise TooManyPartsException('A roll may only have up to 25 parts.')
+                raise TooManyPartsException(
+                    'A roll may only have up to 25 parts.')
 
             for part in parts:
                 match = DiceRoll.syntax_regex.match(part)
@@ -90,7 +94,8 @@ class CompleteRoll:
                 else:
                     num = int(part)
                     if num > 1000:
-                        raise OutOfRangeException('Modifiers must be between 1 and 1000.')
+                        raise OutOfRangeException(
+                            'Modifiers must be between 1 and 1000.')
                     else:
                         modifiers.append(int(part))
 
@@ -111,19 +116,28 @@ class CompleteRoll:
 class CompleteRollResult:
     def __init__(self, rolls, modifiers):
         self.rolls = rolls
-        self.roll_total = sum([-sum(roll.results) if roll.negative else sum(roll.results) for roll in rolls])
+
+        self.roll_total = 0
+        for roll in self.rolls:
+            subtotal = sum(roll.results)
+            if not roll.negative:
+                self.roll_total += subtotal
+            else:
+                self.roll_total -= subtotal
+
         self.modifiers = modifiers
-        self.mod_total = sum(modifiers)
+        self.mod_total = sum(self.modifiers)
         self.total = self.roll_total + self.mod_total
 
     def __str__(self):
-        total = 'Total: {0}\n'.format(self.total)
-        roll_results = '\n'.join(map(lambda x: str(x), self.rolls)) + '\n'
+        total = f'Total: {self.total}\n'
+        roll_results = '\n'.join(str(r) for r in self.rolls) + '\n'
 
         if len(self.modifiers) == 1:
             mod_total = 'Modifier: {0}'.format(self.mod_total)
         else:
-            mod_total = 'Modifiers: {0} | {1}'.format(self.mod_total, ', '.join(map(lambda x: str(x), self.modifiers)))
+            modifiers = ', '.join(str(m) for m in self.modifiers)
+            mod_total = f'Modifiers: {self.mod_total} | {modifiers}'
 
         if len(self.rolls) == 1 and len(self.modifiers) == 0:
             return str(self.rolls[0])

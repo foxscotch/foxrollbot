@@ -1,17 +1,15 @@
 import logging
 import os
 
-from telegram.ext import CommandHandler, MessageHandler
+from telegram.ext import CommandHandler
 from telegram.ext.updater import Updater
 
-from roll import DiceRoll, RollResult, CompleteRoll, CompleteRollResult
-from errors import InvalidSyntaxException,  \
-                   NotANumberException,     \
-                   OutOfRangeException,     \
-                   TooManyPartsException
+from roll import CompleteRoll
+from errors import FoxRollBotException,     \
+                   InvalidSyntaxException
 
 
-logging.basicConfig(level=logging.INFO, # filename='log.txt',
+logging.basicConfig(level=logging.INFO,  # filename='log.txt',
                     format='%(asctime)s %(name)s %(levelname)s: %(message)s')
 
 
@@ -21,19 +19,21 @@ for file_name in os.listdir('./text'):
         text[file_name] = f.read().strip()
 
 
-def start(bot, update):
+def start_cmd(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
-        text=text['start'])
+                     text=text['start'])
 
-def about(bot, update):
-    bot.send_message(chat_id=update.message.chat_id,
-        parse_mode='Markdown',
-        text=text['about'])
 
-def help(bot, update):
+def about_cmd(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
-        parse_mode='Markdown',
-        text=text['help'])
+                     parse_mode='Markdown',
+                     text=text['about'])
+
+
+def help_cmd(bot, update):
+    bot.send_message(chat_id=update.message.chat_id,
+                     parse_mode='Markdown',
+                     text=text['help'])
 
 
 def roll(bot, update, args):
@@ -100,7 +100,7 @@ def roll(bot, update, args):
                     result_str += str(r1)
 
         msg_args['text'] = result_str
-    except InvalidSyntaxException as e:
+    except InvalidSyntaxException:
         msg_args['text'] = 'Syntax: ' + text['syntax']
         msg_args['parse_mode'] = 'Markdown'
     except FoxRollBotException as e:
@@ -120,9 +120,9 @@ if __name__ == '__main__':
     updater = Updater(token)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(CommandHandler('about', about))
-    dispatcher.add_handler(CommandHandler('help', help))
+    dispatcher.add_handler(CommandHandler('start', start_cmd))
+    dispatcher.add_handler(CommandHandler('about', about_cmd))
+    dispatcher.add_handler(CommandHandler('help', help_cmd))
     dispatcher.add_handler(CommandHandler('roll', roll, pass_args=True))
 
     dispatcher.add_error_handler(error_callback)
