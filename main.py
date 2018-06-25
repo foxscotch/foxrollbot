@@ -36,7 +36,7 @@ def help_cmd(bot, update):
                      text=text['help'])
 
 
-def roll(bot, update, args):
+def roll_cmd(bot, update, args):
     msg_args = {
         'chat_id': update.message.chat_id,
         'reply_to_message_id': update.message.message_id,
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler('start', start_cmd))
     dispatcher.add_handler(CommandHandler('about', about_cmd))
     dispatcher.add_handler(CommandHandler('help', help_cmd))
-    dispatcher.add_handler(CommandHandler('roll', roll, pass_args=True))
+    dispatcher.add_handler(CommandHandler('roll', roll_cmd, pass_args=True))
 
     dispatcher.add_error_handler(error_callback)
 
