@@ -6,7 +6,7 @@ from errors import InvalidSyntaxException,  \
                    TooManyPartsException
 
 
-class DiceRoll:
+class Dice:
     MAX_DICE = 100
     MAX_SIDES = 1000
     SYNTAX = re.compile(r'[+-]?(\d+)d(\d+)')
@@ -44,14 +44,14 @@ class DiceRoll:
         results = []
         for i in range(self.qty):
             results.append(random.randint(1, self.die))
-        return RollResult(self.qty, self.die, results, self.negative)
+        return DiceResult(self.qty, self.die, results, self.negative)
 
     def __str__(self):
         sign = '-' if self.negative else ''
         return f'{sign}{self.qty}d{self.die}'
 
 
-class RollResult:
+class DiceResult:
     def __init__(self, qty, die, results, negative):
         self.qty = qty
         self.die = die
@@ -64,7 +64,9 @@ class RollResult:
         return f'{self.qty}d{self.die}: {sum(self.results)}{sep}{ind_results}'
 
 
-class CompleteRoll:
+class Roll:
+    MAX_COMPONENTS = 25
+    MAX_MODIFIER = 1000
     SYNTAX = re.compile(r'(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*')
 
     def __init__(self, rolls, modifiers):
@@ -75,25 +77,26 @@ class CompleteRoll:
     def from_str(cls, roll_str):
         if cls.SYNTAX.fullmatch(roll_str):
             substituted = re.sub(r'([+-])', r'\g<1>\g<1>', roll_str)
-            parts = re.split(r'[+-](?=[+-])', substituted)
+            components = re.split(r'[+-](?=[+-])', substituted)
             rolls = []
             modifiers = []
 
-            if len(parts) > 25:
+            if len(components) > cls.MAX_COMPONENTS:
                 raise TooManyPartsException(
                     'A roll may only have up to 25 parts.')
 
-            for part in parts:
-                match = DiceRoll.SYNTAX.match(part)
+            for comp in components:
+                match = Dice.SYNTAX.match(comp)
                 if match:
-                    rolls.append(DiceRoll.from_str(part))
+                    rolls.append(Dice.from_str(comp))
                 else:
-                    num = int(part)
-                    if num > 1000:
+                    num = int(comp)
+                    if num < 1 or num > cls.MAX_MODIFIER:
                         raise OutOfRangeException(
-                            'Modifiers must be between 1 and 1000.')
+                            'Modifiers must be between 1 and '
+                            f'{cls.MAX_MODIFIER}.')
                     else:
-                        modifiers.append(int(part))
+                        modifiers.append(int(comp))
 
             if len(rolls) == 0:
                 raise InvalidSyntaxException()
@@ -106,10 +109,10 @@ class CompleteRoll:
         results = []
         for roll in self.rolls:
             results.append(roll.roll())
-        return CompleteRollResult(results, self.modifiers)
+        return RollResult(results, self.modifiers)
 
 
-class CompleteRollResult:
+class RollResult:
     def __init__(self, rolls, modifiers):
         self.rolls = rolls
 
@@ -141,3 +144,73 @@ class CompleteRollResult:
             return total + roll_results
         else:
             return total + roll_results + mod_total
+
+
+class RollCommand:
+    def __init__(self):
+        pass
+    
+    @staticmethod
+    def from_args(args):
+        if len(args) == 0:
+            raise InvalidSyntaxException()
+
+        parts = []
+
+        base_part = {
+            'roll': None,
+            'adv': False,
+            'dis': False,
+            'qty': 1
+        }
+
+        cur_part = base_part.copy()
+        for arg in args:
+            if arg[0].isdigit():
+                cur_part = base_part.copy()
+                parts.append(cur_part)
+                cur_part['roll'] = Roll.from_str(arg)
+            else:
+                if cur_part['roll'] is None:
+                    raise InvalidSyntaxException()
+
+                if 'advantage'.startswith(arg):
+                    cur_part['adv'] = True
+                elif 'disadvantage'.startswith(arg):
+                    cur_part['dis'] = True
+                elif arg.startswith('x') and arg[1:].isdigit():
+                    cur_part['qty'] = int(arg[1:])
+                else:
+                    raise InvalidSyntaxException()
+
+        result_str = ''
+        for part in parts:
+            for i in range(part['qty']):
+                if len(result_str) > 0:
+                    result_str += '\n\n'
+
+                r1, r2 = part['roll'].roll(), part['roll'].roll()
+
+                if part['adv']:
+                    if r1.total >= r2.total:
+                        result_str += str(r1)
+                        result_str += '\nOther roll: {0}'.format(r2.total)
+                    else:
+                        result_str += str(r2)
+                        result_str += '\nOther roll: {0}'.format(r1.total)
+                elif part['dis']:
+                    if r1.total <= r2.total:
+                        result_str += str(r1)
+                        result_str += '\nOther roll: {0}'.format(r2.total)
+                    else:
+                        result_str += str(r2)
+                        result_str += '\nOther roll: {0}'.format(r1.total)
+                else:
+                    result_str += str(r1)
+
+        return result_str
+
+
+class RollCommandResult:
+    def __init__(self):
+        pass
