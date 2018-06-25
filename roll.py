@@ -19,7 +19,8 @@ class Dice:
     @classmethod
     def from_str(cls, roll_str):
         if roll_str.startswith('+') or roll_str.startswith('-'):
-            sign, roll_str = roll_str[0], roll_str[1:]
+            sign = roll_str[0]
+            roll_str = roll_str[1:]
         else:
             sign = '+'
 
@@ -147,14 +148,11 @@ class RollResult:
 
 
 class RollCommand:
-    def __init__(self):
-        pass
+    def __init__(self, rolls):
+        self.rolls = rolls
     
     @staticmethod
     def from_args(args):
-        if len(args) == 0:
-            raise InvalidSyntaxException()
-
         parts = []
 
         base_part = {
@@ -164,7 +162,6 @@ class RollCommand:
             'qty': 1
         }
 
-        cur_part = base_part.copy()
         for arg in args:
             if arg[0].isdigit():
                 cur_part = base_part.copy()

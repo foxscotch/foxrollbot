@@ -10,6 +10,10 @@ class NotANumberException(FoxRollBotException):
     pass
 
 
+class NotEnoughArgumentsException(FoxRollBotException):
+    pass
+
+
 class OutOfRangeException(FoxRollBotException):
     pass
 

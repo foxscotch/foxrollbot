@@ -5,8 +5,9 @@ from telegram.ext import CommandHandler, MessageHandler
 from telegram.ext.updater import Updater
 
 from roll import RollCommand
-from errors import FoxRollBotException,     \
-                   InvalidSyntaxException
+from errors import FoxRollBotException,         \
+                   InvalidSyntaxException       \
+                   NotEnoughArgumentsException
 
 
 logging.basicConfig(level=logging.INFO,  # filename='log.txt',
@@ -40,13 +41,21 @@ def roll_cmd(bot, update, args):
     msg_args = {
         'chat_id': update.message.chat_id,
         'reply_to_message_id': update.message.message_id,
+        'parse_mode': 'Markdown'
     }
 
     try:
-        msg_args['text'] = RollCommand.from_args(args)
+        if len(args) < 1:
+            raise NotEnoughArgumentsException(
+                'Rolling dice requires at least one argument.')
+        
+        if args[0][0].isalpha():
+            # TODO: RollCommand.from_saved(args[0])
+            msg_args['text'] = f'Saved roll: {args[0]}'
+        else:
+            msg_args['text'] = RollCommand.from_args(args)
     except InvalidSyntaxException:
-        msg_args['text'] = 'Syntax: ' + text['syntax']
-        msg_args['parse_mode'] = 'Markdown'
+        msg_args['text'] = f"Syntax: {text['syntax']}"
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
 
