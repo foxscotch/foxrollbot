@@ -2,45 +2,41 @@ import re
 import random
 
 from errors import InvalidSyntaxException,  \
-                   NotANumberException,     \
                    OutOfRangeException,     \
                    TooManyPartsException
 
 
 class DiceRoll:
-    syntax_regex = re.compile(r'[+-]?(\d+)d(\d+)')
+    MAX_DICE = 100
+    MAX_SIDES = 1000
+    SYNTAX = re.compile(r'[+-]?(\d+)d(\d+)')
 
     def __init__(self, qty, die, negative=False):
         self.qty = qty
         self.die = die
         self.negative = negative
 
-    @staticmethod
-    def from_str(roll_str):
+    @classmethod
+    def from_str(cls, roll_str):
         if roll_str.startswith('+') or roll_str.startswith('-'):
             sign, roll_str = roll_str[0], roll_str[1:]
         else:
             sign = '+'
 
-        match = DiceRoll.syntax_regex.fullmatch(roll_str)
+        match = cls.SYNTAX.fullmatch(roll_str)
 
         if match:
-            try:
-                qty = int(match.group(1))
-                die = int(match.group(2))
+            qty = int(match.group(1))
+            die = int(match.group(2))
 
-                if qty < 1 or qty > 100:
-                    raise OutOfRangeException(
-                        'Number of dice must be between 1 and 100.')
-                if die < 1 or die > 1000:
-                    raise OutOfRangeException(
-                        'Number of sides must be between 1 and 1000.')
+            if qty < 1 or qty > cls.MAX_DICE:
+                raise OutOfRangeException(
+                    f'Number of dice must be between 1 and {cls.MAX_DICE}.')
+            if die < 2 or die > cls.MAX_SIDES:
+                raise OutOfRangeException(
+                    f'Number of sides must be between 2 and {cls.MAX_SIDES}.')
 
-                return DiceRoll(qty, die, sign == '-')
-            except ValueError:
-                # The regex should prevent any non-numbers. But just in case.
-                raise NotANumberException(
-                    'Number of dice and number of sides must be numbers.')
+            return cls(qty, die, sign == '-')
         else:
             raise InvalidSyntaxException()
 
@@ -69,15 +65,15 @@ class RollResult:
 
 
 class CompleteRoll:
-    syntax_regex = re.compile(r'(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*')
+    SYNTAX = re.compile(r'(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*')
 
     def __init__(self, rolls, modifiers):
         self.rolls = rolls
         self.modifiers = modifiers
 
-    @staticmethod
-    def from_str(roll_str):
-        if CompleteRoll.syntax_regex.fullmatch(roll_str):
+    @classmethod
+    def from_str(cls, roll_str):
+        if cls.SYNTAX.fullmatch(roll_str):
             substituted = re.sub(r'([+-])', r'\g<1>\g<1>', roll_str)
             parts = re.split(r'[+-](?=[+-])', substituted)
             rolls = []
@@ -88,7 +84,7 @@ class CompleteRoll:
                     'A roll may only have up to 25 parts.')
 
             for part in parts:
-                match = DiceRoll.syntax_regex.match(part)
+                match = DiceRoll.SYNTAX.match(part)
                 if match:
                     rolls.append(DiceRoll.from_str(part))
                 else:
@@ -102,7 +98,7 @@ class CompleteRoll:
             if len(rolls) == 0:
                 raise InvalidSyntaxException()
 
-            return CompleteRoll(rolls, modifiers)
+            return cls(rolls, modifiers)
         else:
             raise InvalidSyntaxException()
 
