@@ -3,13 +3,14 @@ import random
 
 from errors import InvalidSyntaxException,  \
                    OutOfRangeException,     \
-                   TooManyPartsException
+                   TooManyComponentsException
 
 
 class Dice:
+    SYNTAX = re.compile(r'[+-]?(\d+)d(\d+)')
+
     MAX_DICE = 100
     MAX_SIDES = 1000
-    SYNTAX = re.compile(r'[+-]?(\d+)d(\d+)')
 
     def __init__(self, qty, die, negative=False):
         self.qty = qty
@@ -66,25 +67,31 @@ class DiceResult:
 
 
 class Roll:
-    MAX_COMPONENTS = 25
-    MAX_MODIFIER = 1000
+    NORMAL = 0
+    ADVANTAGE = 1
+    DISADVANTAGE = 2
+
     SYNTAX = re.compile(r'(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*')
 
-    def __init__(self, rolls, modifiers):
+    MAX_COMPONENTS = 25
+    MAX_MODIFIER = 1000
+
+    def __init__(self, rolls, modifiers, advantage, quantity):
         self.rolls = rolls
         self.modifiers = modifiers
+        self.advantage = advantage
+        self.quantity = quantity
 
     @classmethod
-    def from_str(cls, roll_str):
+    def from_args(cls, roll_str, advantage):
         if cls.SYNTAX.fullmatch(roll_str):
-            substituted = re.sub(r'([+-])', r'\g<1>\g<1>', roll_str)
-            components = re.split(r'[+-](?=[+-])', substituted)
+            components = re.sub(r'([+-])', r' \g<1>', '+' + roll_str).split()
             rolls = []
             modifiers = []
 
             if len(components) > cls.MAX_COMPONENTS:
-                raise TooManyPartsException(
-                    'A roll may only have up to 25 parts.')
+                raise TooManyComponentsException(
+                    'Rolls may only have up to 25 components.')
 
             for comp in components:
                 match = Dice.SYNTAX.match(comp)
@@ -102,7 +109,7 @@ class Roll:
             if len(rolls) == 0:
                 raise InvalidSyntaxException()
 
-            return cls(rolls, modifiers)
+            return cls(rolls, modifiers, advantage)
         else:
             raise InvalidSyntaxException()
 
@@ -110,11 +117,25 @@ class Roll:
         results = []
         for roll in self.rolls:
             results.append(roll.roll())
-        return RollResult(results, self.modifiers)
+
+        if self.advantage is not self.NORMAL:
+            other_results = []
+            for roll in self.rolls:
+                results.append(roll.roll())
+
+            greater = max(results, other_results)
+            lesser = min(results, other_results)
+
+            if self.advantage is self.ADVANTAGE:
+                return RollResult(greater, self.modifiers, lesser)
+            if self.advantage is self.DISADVANTAGE:
+                return RollResult(lesser, self.modifiers, greater)
+        else:
+            return RollResult(results, self.modifiers, None)
 
 
 class RollResult:
-    def __init__(self, rolls, modifiers):
+    def __init__(self, rolls, modifiers, losing):
         self.rolls = rolls
 
         self.roll_total = 0
@@ -129,22 +150,27 @@ class RollResult:
         self.mod_total = sum(self.modifiers)
         self.total = self.roll_total + self.mod_total
 
+        self.losing = losing
+
     def __str__(self):
-        total = f'Total: {self.total}\n'
-        roll_results = '\n'.join(str(r) for r in self.rolls) + '\n'
-
-        if len(self.modifiers) == 1:
-            mod_total = 'Modifier: {0}'.format(self.mod_total)
-        else:
-            modifiers = ', '.join(str(m) for m in self.modifiers)
-            mod_total = f'Modifiers: {self.mod_total} | {modifiers}'
-
         if len(self.rolls) == 1 and len(self.modifiers) == 0:
             return str(self.rolls[0])
-        elif len(self.modifiers) == 0:
-            return total + roll_results
+
+        total = f'Total: {self.total}\n'
+        roll_total = '\n'.join(str(r) for r in self.rolls) + '\n'
+        if len(self.modifiers) == 0:
+            return total + roll_total
+
+        if len(self.modifiers) == 1:
+            mod_total = f'Modifier: {self.mod_total}\n'
         else:
-            return total + roll_results + mod_total
+            modifiers = ', '.join(str(m) for m in self.modifiers)
+            mod_total = f'Modifiers: {self.mod_total} | {modifiers}\n'
+
+        if self.losing is None:
+            return total + roll_total + mod_total
+        else:
+            return total + roll_total + mod_total + f'Other roll: {self.losing}'
 
 
 class RollCommand:
