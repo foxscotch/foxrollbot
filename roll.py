@@ -1,5 +1,6 @@
 import re
 import random
+from functools import total_ordering
 
 from errors import InvalidSyntaxException,  \
                    OutOfRangeException,     \
@@ -53,6 +54,7 @@ class Dice:
         return f'{sign}{self.qty}d{self.die}'
 
 
+@total_ordering
 class DiceResult:
     def __init__(self, qty, die, results, negative):
         self.qty = qty
@@ -64,6 +66,22 @@ class DiceResult:
         sep = ' | ' if self.results else ''
         ind_results = ', '.join(map(lambda x: str(x), self.results))
         return f'{self.qty}d{self.die}: {sum(self.results)}{sep}{ind_results}'
+    
+    def __add__(self, other):
+        if type(other) == int:
+            return sum(self.results) + other
+        else:
+            return sum(self.results) + sum(other.results)
+    
+    def __radd__(self, other):
+        return self.__add__(other)
+    
+    def __eq__(self, other):
+        return sum(self.results) == sum(other.results)
+    
+    def __lt__(self, other):
+        return sum(self.results) < sum(other.results)
+
 
 
 class Roll:
@@ -121,15 +139,15 @@ class Roll:
         if self.advantage is not self.NORMAL:
             other_results = []
             for roll in self.rolls:
-                results.append(roll.roll())
+                other_results.append(roll.roll())
 
             greater = max(results, other_results)
             lesser = min(results, other_results)
 
             if self.advantage is self.ADVANTAGE:
-                return RollResult(greater, self.modifiers, lesser)
+                return RollResult(greater, self.modifiers, sum(lesser))
             if self.advantage is self.DISADVANTAGE:
-                return RollResult(lesser, self.modifiers, greater)
+                return RollResult(lesser, self.modifiers, sum(greater))
         else:
             return RollResult(results, self.modifiers, None)
 
@@ -153,24 +171,26 @@ class RollResult:
         self.losing = losing
 
     def __str__(self):
+        output = ''
+
         if len(self.rolls) == 1 and len(self.modifiers) == 0:
             return str(self.rolls[0])
 
         total = f'Total: {self.total}\n'
-        roll_total = '\n'.join(str(r) for r in self.rolls) + '\n'
-        if len(self.modifiers) == 0:
-            return total + roll_total
+        roll = '\n'.join(str(r) for r in self.rolls)
 
-        if len(self.modifiers) == 1:
-            mod_total = f'Modifier: {self.mod_total}\n'
+        if len(self.modifiers) == 0:
+            output += total + roll
+        elif len(self.modifiers) == 1:
+            output += f'\nModifier: {self.mod_total}'
         else:
             modifiers = ', '.join(str(m) for m in self.modifiers)
-            mod_total = f'Modifiers: {self.mod_total} | {modifiers}\n'
+            output += f'\nModifiers: {self.mod_total} | {modifiers}'
 
         if self.losing is None:
-            return total + roll_total + mod_total
+            return output
         else:
-            return total + roll_total + mod_total + f'Other roll: {self.losing}'
+            return output + f'\nOther roll: {self.losing}'
 
 
 class RollCommand:
