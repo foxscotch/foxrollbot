@@ -2,9 +2,7 @@ import re
 import random
 from functools import total_ordering
 
-from errors import InvalidSyntaxException,  \
-                   OutOfRangeException,     \
-                   TooManyComponentsException
+from errors import *
 
 
 class Dice:
@@ -14,6 +12,13 @@ class Dice:
     MAX_SIDES = 1000
 
     def __init__(self, quantity, die, negative=False):
+        if quantity < 1 or quantity > self.MAX_DICE:
+            raise OutOfRangeException(
+                f'Number of dice must be between 1 and {self.MAX_DICE}.')
+        if die < 2 or die > self.MAX_SIDES:
+            raise OutOfRangeException(
+                f'Number of sides must be between 2 and {self.MAX_SIDES}.')
+
         self.quantity = quantity
         self.die = die
         self.negative = negative
@@ -31,14 +36,6 @@ class Dice:
         if match:
             quantity = int(match.group(1))
             die = int(match.group(2))
-
-            if quantity < 1 or quantity > cls.MAX_DICE:
-                raise OutOfRangeException(
-                    f'Number of dice must be between 1 and {cls.MAX_DICE}.')
-            if die < 2 or die > cls.MAX_SIDES:
-                raise OutOfRangeException(
-                    f'Number of sides must be between 2 and {cls.MAX_SIDES}.')
-
             return cls(quantity, die, sign == '-')
         else:
             raise InvalidSyntaxException()
@@ -96,11 +93,20 @@ class Roll:
     MAX_COMPONENTS = 25
     MAX_MODIFIER = 1000
 
-    def __init__(self, rolls, modifiers, advantage, quantity):
+    def __init__(self, rolls, modifiers, advantage):
+        components = len(rolls) + len(modifiers)
+        if components < 1 or components > self.MAX_COMPONENTS:
+            raise TooManyComponentsException(
+                f'Rolls may only have up to {self.MAX_COMPONENTS} components.')
+
+        for modifier in modifiers:
+            if modifier < 1 or modifier > self.MAX_MODIFIER:
+                raise OutOfRangeException(
+                    f'Modifiers must be between 1 and {self.MAX_MODIFIER}.')
+
         self.rolls = rolls
         self.modifiers = modifiers
         self.advantage = advantage
-        self.quantity = quantity
 
     @classmethod
     def from_args(cls, roll_str, advantage):
@@ -109,22 +115,12 @@ class Roll:
             rolls = []
             modifiers = []
 
-            if len(components) > cls.MAX_COMPONENTS:
-                raise TooManyComponentsException(
-                    'Rolls may only have up to 25 components.')
-
             for comp in components:
                 match = Dice.SYNTAX.match(comp)
                 if match:
                     rolls.append(Dice.from_str(comp))
                 else:
-                    num = int(comp)
-                    if num < 1 or num > cls.MAX_MODIFIER:
-                        raise OutOfRangeException(
-                            'Modifiers must be between 1 and '
-                            f'{cls.MAX_MODIFIER}.')
-                    else:
-                        modifiers.append(int(comp))
+                    modifiers.append(int(comp))
 
             if len(rolls) == 0:
                 raise InvalidSyntaxException()
