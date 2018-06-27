@@ -5,14 +5,26 @@ from roll import Dice, Roll
 
 
 def reset_seed():
+    # Keep in mind that if the seed changes, all of the outputs will too.
     random.seed(1, version=2)
 
 
 class DiceTestCase(TestCase):
     def setUp(self):
         reset_seed()
+    
+    def test_single_die_output(self):
+        dice = Dice(1, 20)
+        self.assertEqual(str(dice.roll()), '1d20: 5')
+    
+    def test_multi_dice_output(self):
+        dice = Dice(4, 8)
+        self.assertEqual(str(dice.roll()), '4d8: 12 | 3, 2, 5, 2')
 
     def test_within_bounds_1d20(self):
+        # I'm not sure if this test and the next are really necessary,
+        # especially given that I'm testing pre-determined output. But I'll
+        # leave them here for now.
         dice = Dice(1, 20)
         result = sum(dice.roll().results)
         self.assertGreaterEqual(result, 1)
@@ -35,7 +47,7 @@ class RollTestCase(TestCase):
         self.result = self.roll.roll()
         self.expected_output =     \
             f'Total: 39\n'          \
-            f'1d20: 13 | 13\n'       \
+            f'1d20: 13\n'       \
             f'2d4: 3 | 2, 1\n'        \
             f'4d8: 23 | 8, 1, 7, 7\n'  \
             f'Other roll: 35'

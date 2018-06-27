@@ -13,8 +13,8 @@ class Dice:
     MAX_DICE = 100
     MAX_SIDES = 1000
 
-    def __init__(self, qty, die, negative=False):
-        self.qty = qty
+    def __init__(self, quantity, die, negative=False):
+        self.quantity = quantity
         self.die = die
         self.negative = negative
 
@@ -29,43 +29,45 @@ class Dice:
         match = cls.SYNTAX.fullmatch(roll_str)
 
         if match:
-            qty = int(match.group(1))
+            quantity = int(match.group(1))
             die = int(match.group(2))
 
-            if qty < 1 or qty > cls.MAX_DICE:
+            if quantity < 1 or quantity > cls.MAX_DICE:
                 raise OutOfRangeException(
                     f'Number of dice must be between 1 and {cls.MAX_DICE}.')
             if die < 2 or die > cls.MAX_SIDES:
                 raise OutOfRangeException(
                     f'Number of sides must be between 2 and {cls.MAX_SIDES}.')
 
-            return cls(qty, die, sign == '-')
+            return cls(quantity, die, sign == '-')
         else:
             raise InvalidSyntaxException()
 
     def roll(self):
         results = []
-        for i in range(self.qty):
+        for i in range(self.quantity):
             results.append(random.randint(1, self.die))
-        return DiceResult(self.qty, self.die, results, self.negative)
+        return DiceResult(self, results, self.negative)
 
     def __str__(self):
         sign = '-' if self.negative else ''
-        return f'{sign}{self.qty}d{self.die}'
+        return f'{sign}{self.quantity}d{self.die}'
 
 
 @total_ordering
 class DiceResult:
-    def __init__(self, qty, die, results, negative):
-        self.qty = qty
-        self.die = die
+    def __init__(self, dice, results, negative):
+        self.dice = dice
         self.negative = negative
         self.results = results
 
     def __str__(self):
-        sep = ' | ' if self.results else ''
-        ind_results = ', '.join(map(lambda x: str(x), self.results))
-        return f'{self.qty}d{self.die}: {sum(self.results)}{sep}{ind_results}'
+        sep = ' | ' if len(self.results) > 1 else ''
+        if len(self.results) > 1:
+            ind_results = ', '.join(str(r) for r in self.results)
+        else:
+            ind_results = ''
+        return f'{self.dice}: {sum(self.results)}{sep}{ind_results}'
     
     def __add__(self, other):
         if type(other) == int:
@@ -205,7 +207,7 @@ class RollCommand:
             'roll': None,
             'adv': False,
             'dis': False,
-            'qty': 1
+            'quantity': 1
         }
 
         for arg in args:
@@ -222,13 +224,13 @@ class RollCommand:
                 elif 'disadvantage'.startswith(arg):
                     cur_part['dis'] = True
                 elif arg.startswith('x') and arg[1:].isdigit():
-                    cur_part['qty'] = int(arg[1:])
+                    cur_part['quantity'] = int(arg[1:])
                 else:
                     raise InvalidSyntaxException()
 
         result_str = ''
         for part in parts:
-            for i in range(part['qty']):
+            for i in range(part['quantity']):
                 if len(result_str) > 0:
                     result_str += '\n\n'
 
