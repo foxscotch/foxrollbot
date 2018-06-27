@@ -4,9 +4,13 @@ from unittest import TestCase, main
 from roll import Dice, Roll
 
 
+def reset_seed():
+    random.seed(1, version=2)
+
+
 class DiceTestCase(TestCase):
     def setUp(self):
-        random.seed(1, version=2)
+        reset_seed()
 
     def test_within_bounds_1d20(self):
         dice = Dice(1, 20)
@@ -23,7 +27,7 @@ class DiceTestCase(TestCase):
 
 class RollTestCase(TestCase):
     def setUp(self):
-        random.seed(1, version=2)
+        reset_seed()
         d1 = Dice(1, 20)
         d2 = Dice(2, 4)
         d3 = Dice(4, 8)
