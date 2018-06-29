@@ -109,7 +109,7 @@ class Roll:
         self.advantage = advantage
 
     @classmethod
-    def from_args(cls, roll_str, advantage):
+    def from_str(cls, roll_str, advantage):
         if cls.SYNTAX.fullmatch(roll_str):
             components = re.sub(r'([+-])', r' \g<1>', '+' + roll_str).split()
             rolls = []
@@ -171,10 +171,12 @@ class RollResult:
     def __str__(self):
         output = ''
 
-        if len(self.rolls) == 1 and len(self.modifiers) == 0:
+        roll_count = len(self.rolls)
+        mod_count = len(self.modifiers)
+        if roll_count == 1 and mod_count == 0 and self.losing is None:
             return str(self.rolls[0])
 
-        total = f'Total: {self.total}\n'
+        total = f'Total: {self.total}\n' if roll_count > 1 else ''
         roll = '\n'.join(str(r) for r in self.rolls)
 
         if len(self.modifiers) == 0:
@@ -197,59 +199,39 @@ class RollCommand:
     
     @staticmethod
     def from_args(args):
-        parts = []
+        rolls = []
 
-        base_part = {
+        # Dict in which to temporarily store roll info
+        cur_roll = {
             'roll': None,
-            'adv': False,
-            'dis': False,
-            'quantity': 1
+            'adv': Roll.NORMAL,
+            'qty': 1
         }
 
         for arg in args:
             if arg[0].isdigit():
-                cur_part = base_part.copy()
-                parts.append(cur_part)
-                cur_part['roll'] = Roll.from_str(arg)
+                if cur_roll['roll'] is not None:
+                    roll = Roll.from_str(cur_roll['roll'], cur_roll['adv'])
+                    rolls += [roll] * cur_roll['qty']
+                cur_roll = {
+                    'roll': arg,
+                    'adv': Roll.NORMAL,
+                    'qty': 1
+                }
+            elif arg[0] == 'x' and arg[1:].isnumeric():
+                cur_roll['qty'] = int(arg[1:])
             else:
-                if cur_part['roll'] is None:
-                    raise InvalidSyntaxException()
-
                 if 'advantage'.startswith(arg):
-                    cur_part['adv'] = True
+                    cur_roll['adv'] = Roll.ADVANTAGE
                 elif 'disadvantage'.startswith(arg):
-                    cur_part['dis'] = True
-                elif arg.startswith('x') and arg[1:].isdigit():
-                    cur_part['quantity'] = int(arg[1:])
+                    cur_roll['adv'] = Roll.DISADVANTAGE
                 else:
                     raise InvalidSyntaxException()
 
-        result_str = ''
-        for part in parts:
-            for i in range(part['quantity']):
-                if len(result_str) > 0:
-                    result_str += '\n\n'
+        roll = Roll.from_str(cur_roll['roll'], cur_roll['adv'])
+        rolls += [roll] * cur_roll['qty']
 
-                r1, r2 = part['roll'].roll(), part['roll'].roll()
-
-                if part['adv']:
-                    if r1.total >= r2.total:
-                        result_str += str(r1)
-                        result_str += '\nOther roll: {0}'.format(r2.total)
-                    else:
-                        result_str += str(r2)
-                        result_str += '\nOther roll: {0}'.format(r1.total)
-                elif part['dis']:
-                    if r1.total <= r2.total:
-                        result_str += str(r1)
-                        result_str += '\nOther roll: {0}'.format(r2.total)
-                    else:
-                        result_str += str(r2)
-                        result_str += '\nOther roll: {0}'.format(r1.total)
-                else:
-                    result_str += str(r1)
-
-        return result_str
+        return '\n\n'.join(str(r.roll()) for r in rolls)
 
 
 class RollCommandResult:

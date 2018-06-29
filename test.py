@@ -1,7 +1,7 @@
 import random
 from unittest import TestCase, main
 
-from roll import Dice, Roll
+from roll import Dice, Roll, RollCommand
 from errors import *
 
 
@@ -55,37 +55,74 @@ class DiceTestCase(TestCase):
 class RollTestCase(TestCase):
     def setUp(self):
         reset_seed()
-
+    
+    def test_simple_roll_output(self):
+        roll = Roll([Dice(1, 20)], [], Roll.NORMAL)
+        result = roll.roll()
+        expected_output = '1d20: 5'
+        self.assertEqual(str(result), expected_output)
+    
+    def test_simple_roll_output_with_advantage(self):
+        roll = Roll([Dice(1, 20)], [], Roll.ADVANTAGE)
+        result = roll.roll()
+        expected_output =     \
+            f'1d20: 19\n'      \
+            f'Other roll: 5'
+        self.assertEqual(str(result), expected_output)
+    
+    def test_simple_roll_output_with_disadvantage(self):
+        roll = Roll([Dice(1, 20)], [], Roll.DISADVANTAGE)
+        result = roll.roll()
+        expected_output =      \
+            f'1d20: 5\n'        \
+            f'Other roll: 19'
+        self.assertEqual(str(result), expected_output)
+    
+    def test_complex_roll_output(self):
         d1 = Dice(1, 20)
         d2 = Dice(2, 4)
         d3 = Dice(4, 8)
-
-        self.dice = d1
-        self.roll = Roll([d1, d2, d3], [], Roll.ADVANTAGE)
-    
-    def test_roll_output(self):
-        self.result = self.roll.roll()
-        self.expected_output =     \
+        roll = Roll([d1, d2, d3], [], Roll.ADVANTAGE)
+        result = roll.roll()
+        expected_output =          \
             f'Total: 39\n'          \
             f'1d20: 13\n'            \
             f'2d4: 3 | 2, 1\n'        \
             f'4d8: 23 | 8, 1, 7, 7\n'  \
             f'Other roll: 35'
-        self.assertEqual(str(self.result), self.expected_output)
+        self.assertEqual(str(result), expected_output)
     
     def test_disallows_too_many_components(self):
+        dice = Dice(1, 20)
         modifiers = [1] * Roll.MAX_COMPONENTS
         self.assertRaises(TooManyComponentsException,
-                          lambda: Roll([self.dice], modifiers, Roll.NORMAL))
+                          lambda: Roll([dice], modifiers, Roll.NORMAL))
     
     def test_disallows_small_modifier(self):
+        dice = Dice(1, 20)
         self.assertRaises(OutOfRangeException,
-                          lambda: Roll([self.dice], [0], Roll.NORMAL))
+                          lambda: Roll([dice], [0], Roll.NORMAL))
     
     def test_disallows_large_modifier(self):
+        dice = Dice(1, 20)
         modifier = Roll.MAX_MODIFIER + 1
         self.assertRaises(OutOfRangeException,
-                          lambda: Roll([self.dice], [modifier], Roll.NORMAL))
+                          lambda: Roll([dice], [modifier], Roll.NORMAL))
+
+
+class RollCommandTestCase(TestCase):
+    def setUp(self):
+        reset_seed()
+    
+    def test_roll_command_output(self):
+        args = ['1d20', 'adv', 'x2']
+        rc = RollCommand.from_args(args)
+        expected_output =       \
+            f'1d20: 19\n'        \
+            f'Other roll: 5\n\n'  \
+            f'1d20: 9\n'           \
+            f'Other roll: 3'
+        self.assertEqual(str(rc), expected_output)
 
 
 if __name__ == '__main__':
