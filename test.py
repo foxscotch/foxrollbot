@@ -123,6 +123,12 @@ class RollCommandTestCase(TestCase):
             f'1d20: 9\n'           \
             f'Other roll: 3'
         self.assertEqual(str(rc), expected_output)
+    
+    def test_disallows_too_many_rolls(self):
+        roll = Roll([Dice(1, 20)], [], Roll.NORMAL)
+        rolls = [roll] * (Roll.MAX_COMPONENTS + 1)
+        self.assertRaises(TooManyComponentsException,
+                          lambda: RollCommand(rolls))
 
 
 if __name__ == '__main__':

@@ -194,14 +194,20 @@ class RollResult:
 
 
 class RollCommand:
+    MAX_ROLLS = 25
+
     def __init__(self, rolls):
+        if len(rolls) > self.MAX_ROLLS:
+            raise TooManyComponentsException(
+                f'There is a maximum of {self.MAX_ROLLS} individual rolls per '
+                'command.')
+
         self.rolls = rolls
     
-    @staticmethod
-    def from_args(args):
+    @classmethod
+    def from_args(cls, args):
         rolls = []
 
-        # Dict in which to temporarily store roll info
         cur_roll = {
             'roll': None,
             'adv': Roll.NORMAL,
@@ -231,9 +237,7 @@ class RollCommand:
         roll = Roll.from_str(cur_roll['roll'], cur_roll['adv'])
         rolls += [roll] * cur_roll['qty']
 
-        return '\n\n'.join(str(r.roll()) for r in rolls)
-
-
-class RollCommandResult:
-    def __init__(self):
-        pass
+        return cls(rolls)
+    
+    def __str__(self):
+        return '\n\n'.join(str(r.roll()) for r in self.rolls)
