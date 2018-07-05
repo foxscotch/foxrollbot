@@ -61,9 +61,13 @@ def roll_cmd(bot, update, args):
 
 
 def test(bot, update):
-    import json
-    msg = json.dumps(update.message.to_dict(), indent=True)
-    bot.send_message(chat_id=update.message.chat_id, parse_mode='Markdown', text=f'```{msg}```')
+    # Only reply if @foxscotch sent the message
+    if update.message.from_user.id == 136418592:
+        import json
+        msg = json.dumps(update.message.to_dict(), indent=True)
+        bot.send_message(chat_id=update.message.chat_id,
+                         parse_mode='Markdown',
+                         text=f'```{msg}```')
 
 
 def error_callback(bot, update, error):
