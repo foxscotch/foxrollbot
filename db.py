@@ -1,18 +1,53 @@
-import sqlite3
+class SavedRollManager:
+    """
+    Class for managing saved rolls.
 
+    Attributes:
+        connection (sqlite3.Connection): Database connection used by manager
+    """
 
-connection = sqlite3.connect('data.db')
+    def __init__(self, connection):
+        """
+        Create a SavedRollManager instance.
 
+        Args:
+            connection (sqlite3.Connection): Database connection to use
+        """
+        self.conn = connection
 
-class SavedRoll:
-    @staticmethod
-    def save(user, name, args):
+    def save(self, user, chat, name, args):
+        """
+        Save a roll to the database.
+
+        Args:
+            user (int): User ID to save roll for
+            chat (int): Chat ID to save roll for
+            name: Name of saved roll
+            args: Arguments to save for roll
+        """
         pass
 
-    @staticmethod
-    def get(user, name):
+    def get(self, user, chat, name):
+        """
+        Get a saved roll from the database.
+
+        Args:
+            user (int): User ID to get roll for
+            chat (int): Chat ID to get roll for
+            name: Name of saved roll
+
+        Returns:
+            list: List of arguments of saved roll
+        """
         pass
 
-    @staticmethod
-    def delete(user, name):
+    def delete(self, user, chat, name):
+        """
+        Delete a saved roll from the database.
+
+        Args:
+            user (int): User ID to delete roll from
+            chat (int): Chat ID to delete roll from
+            name: Name of saved roll
+        """
         pass
