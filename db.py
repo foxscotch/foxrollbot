@@ -13,7 +13,7 @@ class SavedRollManager:
         Args:
             connection (sqlite3.Connection): Database connection to use
         """
-        self.conn = connection
+        self.connection = connection
 
     def save(self, user, chat, name, args):
         """
@@ -22,8 +22,8 @@ class SavedRollManager:
         Args:
             user (int): User ID to save roll for
             chat (int): Chat ID to save roll for
-            name: Name of saved roll
-            args: Arguments to save for roll
+            name (str): Name of saved roll
+            args (list): Arguments to save for roll
         """
         pass
 
@@ -34,7 +34,7 @@ class SavedRollManager:
         Args:
             user (int): User ID to get roll for
             chat (int): Chat ID to get roll for
-            name: Name of saved roll
+            name (str): Name of saved roll
 
         Returns:
             list: List of arguments of saved roll
@@ -48,6 +48,6 @@ class SavedRollManager:
         Args:
             user (int): User ID to delete roll from
             chat (int): Chat ID to delete roll from
-            name: Name of saved roll
+            name (str): Name of saved roll
         """
         pass
