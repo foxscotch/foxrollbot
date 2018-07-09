@@ -27,13 +27,13 @@ class SavedRollManager:
         self.connection.cursor().execute(
             'CREATE TABLE IF NOT EXISTS saved_rolls ('
             'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-            'user_id INTEGER,'
-            'chat_id INTEGER,'
             'name VARCHAR(32),'
-            'arguments TEXT NOT NULL);')
+            'arguments TEXT NOT NULL,'
+            'user_id INTEGER,'
+            'chat_id INTEGER);')
         self.connection.commit()
 
-    def save(self, user, chat, name, args):
+    def save(self, name, args, user=None, chat=None):
         """
         Save a roll to the database.
 
@@ -51,9 +51,9 @@ class SavedRollManager:
         # Other than that check, I think this might already be enough, actually.
         cursor = self.connection.cursor()
         cursor.execute('INSERT INTO saved_rolls VALUES (?, ?, ?, ?, ?)',
-                       (None, user, chat, name, ' '.join(args)))
+                       (None, name, ' '.join(args), user, chat))
 
-    def get(self, user, chat, name):
+    def get(self, name, user=None, chat=None):
         """
         Get a saved roll from the database.
 
@@ -67,7 +67,7 @@ class SavedRollManager:
         """
         pass
 
-    def delete(self, user, chat, name):
+    def delete(self, name, user=None, chat=None):
         """
         Delete a saved roll from the database.
 
