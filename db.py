@@ -14,6 +14,21 @@ class SavedRollManager:
             connection (sqlite3.Connection): Database connection to use
         """
         self.connection = connection
+        self._init_db()
+
+    def _init_db(self):
+        """
+        Ensures that the database is set up correctly, initializing it if
+        necessary.
+        """
+        self.connection.cursor().execute(
+            'CREATE TABLE IF NOT EXISTS saved_rolls ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+            'user_id INTEGER,'
+            'chat_id INTEGER,'
+            'name VARCHAR(32),'
+            'arguments TEXT NOT NULL);')
+        self.connection.commit()
 
     def save(self, user, chat, name, args):
         """
@@ -25,7 +40,9 @@ class SavedRollManager:
             name (str): Name of saved roll
             args (list): Arguments to save for roll
         """
-        pass
+        cursor = self.connection.cursor()
+        cursor.execute('INSERT INTO saved_rolls VALUES (?, ?, ?, ?, ?)',
+                       (None, user, chat, name, ' '.join(args)))
 
     def get(self, user, chat, name):
         """
