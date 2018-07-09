@@ -1,3 +1,6 @@
+from roll import Roll
+
+
 class SavedRollManager:
     """
     Class for managing saved rolls.
@@ -40,6 +43,12 @@ class SavedRollManager:
             name (str): Name of saved roll
             args (list): Arguments to save for roll
         """
+        # Try to create a Roll from the arguments, to make sure they're valid.
+        # It'll raise an error if it's bad, and it turns out that's what we
+        # want, so we can just save right afterwards, no try necessary.
+        Roll.from_args(args)
+
+        # Other than that check, I think this might already be enough, actually.
         cursor = self.connection.cursor()
         cursor.execute('INSERT INTO saved_rolls VALUES (?, ?, ?, ?, ?)',
                        (None, user, chat, name, ' '.join(args)))
