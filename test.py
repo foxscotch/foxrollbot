@@ -80,17 +80,15 @@ class RollTestCase(TestCase):
     def test_simple_roll_output_with_advantage(self):
         roll = Roll([Dice(1, 20)], [], Roll.ADVANTAGE)
         result = roll.roll()
-        expected_output =     \
-            f'1d20: 19\n'      \
-            f'Other roll: 5'
+        expected_output = ('1d20: 19\n'
+                           'Other roll: 5')
         self.assertEqual(str(result), expected_output)
     
     def test_simple_roll_output_with_disadvantage(self):
         roll = Roll([Dice(1, 20)], [], Roll.DISADVANTAGE)
         result = roll.roll()
-        expected_output =      \
-            f'1d20: 5\n'        \
-            f'Other roll: 19'
+        expected_output = ('1d20: 5\n'
+                           'Other roll: 19')
         self.assertEqual(str(result), expected_output)
     
     def test_complex_roll_output(self):
@@ -99,12 +97,11 @@ class RollTestCase(TestCase):
         d3 = Dice(4, 8)
         roll = Roll([d1, d2, d3], [], Roll.ADVANTAGE)
         result = roll.roll()
-        expected_output =          \
-            f'Total: 39\n'          \
-            f'1d20: 13\n'            \
-            f'2d4: 3 | 2, 1\n'        \
-            f'4d8: 23 | 8, 1, 7, 7\n'  \
-            f'Other roll: 35'
+        expected_output = ('Total: 39\n'
+                           '1d20: 13\n'
+                           '2d4: 3 | 2, 1\n'
+                           '4d8: 23 | 8, 1, 7, 7\n'
+                           'Other roll: 35')
         self.assertEqual(str(result), expected_output)
     
     def test_disallows_too_many_components(self):
@@ -144,11 +141,10 @@ class RollCommandTestCase(TestCase):
     def test_roll_command_output(self):
         args = ['1d20', 'adv', 'x2']
         rc = RollCommand.from_args(args)
-        expected_output =       \
-            f'1d20: 19\n'        \
-            f'Other roll: 5\n\n'  \
-            f'1d20: 9\n'           \
-            f'Other roll: 3'
+        expected_output = ('1d20: 19\n'
+                           'Other roll: 5\n\n'
+                           '1d20: 9\n'
+                           'Other roll: 3')
         self.assertEqual(str(rc), expected_output)
     
     def test_disallows_too_many_rolls(self):
