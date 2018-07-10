@@ -14,6 +14,9 @@ class DiceTestCase(TestCase):
     def setUp(self):
         reset_seed()
     
+    def test_from_str(self):
+        self.assertEqual(Dice.from_str('1d20'), Dice(1, 20))
+    
     def test_single_die_output(self):
         dice = Dice(1, 20)
         self.assertEqual(str(dice.roll()), '1d20: 5')
@@ -36,6 +39,13 @@ class DiceTestCase(TestCase):
         sides = Dice.MAX_SIDES + 1
         self.assertRaises(OutOfRangeException, lambda: Dice(1, sides))
 
+    def test_equals_comparison(self):
+        d1 = Dice(1, 20)
+        d2 = Dice(1, 20)
+        d3 = Dice(4, 6)
+        self.assertEqual(d1, d2)
+        self.assertNotEqual(d1, d3)
+
     def test_within_bounds_1d20(self):
         # I'm not sure if this test and the next are really necessary,
         # especially given that I'm testing pre-determined output. But I'll
@@ -55,6 +65,11 @@ class DiceTestCase(TestCase):
 class RollTestCase(TestCase):
     def setUp(self):
         reset_seed()
+    
+    def test_from_str(self):
+        r1 = Roll([Dice(1, 20), Dice(4, 6)], [5, -2], False)
+        r2 = Roll.from_str('1d20+4d6+5-2', False)
+        self.assertEqual(r1, r2)
     
     def test_simple_roll_output(self):
         roll = Roll([Dice(1, 20)], [], Roll.NORMAL)
@@ -108,6 +123,18 @@ class RollTestCase(TestCase):
         modifier = Roll.MAX_MODIFIER + 1
         self.assertRaises(OutOfRangeException,
                           lambda: Roll([dice], [modifier], Roll.NORMAL))
+
+    def test_equals_comparison(self):
+        d1 = Dice(1, 20)
+        d2 = Dice(1, 20)
+        d3 = Dice(4, 6)
+
+        r1 = Roll([d1, d2, d3], [5, -2])
+        r2 = Roll(r1.rolls, r1.modifiers, r1.advantage)
+        r3 = Roll([d1, d3], [1, 6], Roll.ADVANTAGE)
+
+        self.assertEqual(r1, r2)
+        self.assertNotEqual(r1, r3)
 
 
 class RollCommandTestCase(TestCase):

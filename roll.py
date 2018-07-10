@@ -49,6 +49,14 @@ class Dice:
     def __str__(self):
         sign = '-' if self.negative else ''
         return f'{sign}{self.quantity}d{self.die}'
+    
+    def __eq__(self, other):
+        try:
+            quantity = self.quantity == other.quantity
+            die = self.die == other.die
+            return True if quantity and die else False
+        except AttributeError:
+            return False
 
 
 @total_ordering
@@ -93,7 +101,7 @@ class Roll:
     MAX_COMPONENTS = 25
     MAX_MODIFIER = 1000
 
-    def __init__(self, rolls, modifiers, advantage):
+    def __init__(self, rolls, modifiers, advantage=NORMAL):
         components = len(rolls) + len(modifiers)
         if components < 1 or components > self.MAX_COMPONENTS:
             raise TooManyComponentsException(
@@ -109,7 +117,7 @@ class Roll:
         self.advantage = advantage
 
     @classmethod
-    def from_str(cls, roll_str, advantage):
+    def from_str(cls, roll_str, advantage=NORMAL):
         if cls.SYNTAX.fullmatch(roll_str):
             components = re.sub(r'([+-])', r' \g<1>', '+' + roll_str).split()
             rolls = []
