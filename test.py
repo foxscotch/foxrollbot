@@ -162,18 +162,25 @@ class SavedRollManagerTestCase(TestCase):
         self.srm = SavedRollManager(self.conn)
 
     def test_save(self):
-        self.srm.save('test_roll', ['1d20', 'adv'])
+        self.srm.save('test_roll', ['1d20', 'adv'], user=12345)
         cursor = self.conn.cursor()
         cursor.execute('SELECT * FROM saved_rolls;')
         results = cursor.fetchall()
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0], (1, 'test_roll', '1d20 adv', None, None))
+        self.assertEqual(results[0], (1, 'test_roll', '1d20 adv', 12345, None))
 
     def test_get(self):
-        self.fail()
+        self.test_save()
+        args = self.srm.get('test_roll', user=12345)
+        self.assertEqual(args, ['1d20', 'adv'])
 
     def test_delete(self):
-        self.fail()
+        self.test_save()
+        self.srm.delete('test_roll', user=12345)
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT * FROM saved_rolls;')
+        results = cursor.fetchall()
+        self.assertEqual(len(results), 0)
 
 
 if __name__ == '__main__':
