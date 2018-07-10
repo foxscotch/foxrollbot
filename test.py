@@ -1,6 +1,7 @@
 import random
 from unittest import TestCase, main
 
+from db import SavedRollManager
 from roll import Dice, Roll, RollCommand
 from errors import *
 
@@ -152,6 +153,17 @@ class RollCommandTestCase(TestCase):
         rolls = [roll] * (Roll.MAX_COMPONENTS + 1)
         self.assertRaises(TooManyComponentsException,
                           lambda: RollCommand(rolls))
+
+
+class SavedRollManagerTestCase(TestCase):
+    def test_save(self):
+        self.fail()
+
+    def test_get(self):
+        self.fail()
+
+    def test_delete(self):
+        self.fail()
 
 
 if __name__ == '__main__':
