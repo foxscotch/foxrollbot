@@ -1,4 +1,5 @@
 import random
+import sqlite3
 from unittest import TestCase, main
 
 from db import SavedRollManager
@@ -156,8 +157,17 @@ class RollCommandTestCase(TestCase):
 
 
 class SavedRollManagerTestCase(TestCase):
+    def setUp(self):
+        self.conn = sqlite3.connect(':memory:')
+        self.srm = SavedRollManager(self.conn)
+
     def test_save(self):
-        self.fail()
+        self.srm.save('test_roll', ['1d20', 'adv'])
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT * FROM saved_rolls;')
+        results = cursor.fetchall()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0], (1, 'test_roll', '1d20 adv', None, None))
 
     def test_get(self):
         self.fail()

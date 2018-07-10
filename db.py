@@ -1,4 +1,4 @@
-from roll import Roll
+from roll import RollCommand
 
 
 class SavedRollManager:
@@ -46,7 +46,7 @@ class SavedRollManager:
         # Try to create a Roll from the arguments, to make sure they're valid.
         # It'll raise an error if it's bad, and it turns out that's what we
         # want, so we can just save right afterwards, no try necessary.
-        Roll.from_args(args)
+        RollCommand.from_args(args)
 
         # Other than that check, I think this might already be enough, actually.
         cursor = self.connection.cursor()
