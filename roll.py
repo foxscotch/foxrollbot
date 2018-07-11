@@ -108,9 +108,10 @@ class Roll:
                 f'Rolls may only have up to {self.MAX_COMPONENTS} components.')
 
         for modifier in modifiers:
-            if modifier < 1 or modifier > self.MAX_MODIFIER:
+            if modifier == 0 or abs(modifier) > self.MAX_MODIFIER:
                 raise OutOfRangeException(
-                    f'Modifiers must be between 1 and {self.MAX_MODIFIER}.')
+                    'Modifiers must be non-zero integer with an absolute value ' 
+                    f'less than {self.MAX_MODIFIER}.')
 
         self.rolls = rolls
         self.modifiers = modifiers

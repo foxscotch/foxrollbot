@@ -122,6 +122,14 @@ class RollTestCase(TestCase):
         modifier = Roll.MAX_MODIFIER + 1
         self.assertRaises(OutOfRangeException,
                           lambda: Roll([dice], [modifier], Roll.NORMAL))
+    
+    def test_allows_negative_modifier(self):
+        try:
+            dice = Dice(1, 20)
+            modifier = -12
+            Roll([dice], [modifier])
+        except OutOfRangeException:
+            self.fail('Roll() must allow negative modifiers')
 
     def test_equals_comparison(self):
         d1 = Dice(1, 20)
