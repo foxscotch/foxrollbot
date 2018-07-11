@@ -156,6 +156,10 @@ class RollCommandTestCase(TestCase):
                            'Other roll: 3')
         self.assertEqual(str(rc), expected_output)
     
+    def test_invalid_first_argument(self):
+        self.assertRaises(InvalidSyntaxException,
+                          lambda: RollCommand.from_args(['adv']))
+    
     def test_disallows_too_many_rolls(self):
         roll = Roll([Dice(1, 20)], [])
         rolls = [roll] * (Roll.MAX_COMPONENTS + 1)
@@ -195,6 +199,14 @@ class SavedRollManagerTestCase(TestCase):
         self.srm.delete('example_roll', 12345)
         length = self.get_db_entries()[0]
         self.assertEqual(length, 0)
+    
+    def test_update(self):
+        self.srm.save('example_roll', ['4d6', 'x2'], 12345)
+        self.assertEqual(self.srm.get('example_roll', 12345), ['4d6', 'x2'])
+    
+    def test_invalid_roll(self):
+        self.assertRaises(InvalidSyntaxException,
+                          lambda: self.srm.save('test_roll', ['adv'], 12345))
 
 
 if __name__ == '__main__':

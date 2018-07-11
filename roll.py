@@ -157,6 +157,21 @@ class Roll:
                 return RollResult(lesser, self.modifiers, sum(greater))
         else:
             return RollResult(results, self.modifiers, None)
+    
+    def __eq__(self, other):
+        pairs = list(zip(self.rolls, other.rolls)) \
+              + list(zip(self.modifiers, other.modifiers))
+
+        try:
+            if self.advantage != other.advantage:
+                return False
+            else:
+                for pair in pairs:
+                    if pair[0] != pair[1]:
+                        return False
+            return True
+        except AttributeError:
+            return False
 
 
 class RollResult:
@@ -233,6 +248,8 @@ class RollCommand:
                     'adv': Roll.NORMAL,
                     'qty': 1
                 }
+            elif cur_roll['roll'] is None:
+                raise InvalidSyntaxException()
             elif arg[0] == 'x' and arg[1:].isnumeric():
                 cur_roll['qty'] = int(arg[1:])
             else:

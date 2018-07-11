@@ -31,7 +31,7 @@ class SavedRollManager:
         if connection is None:
             self.connection = sqlite3.connect(':memory:')
         else:
-        self.connection = connection
+            self.connection = connection
 
         self._load_statements()
         self._init_db()
