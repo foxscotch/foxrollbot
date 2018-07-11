@@ -4,6 +4,7 @@ import os
 from telegram.ext import CommandHandler, MessageHandler
 from telegram.ext.updater import Updater
 
+from db import SavedRollManager
 from roll import RollCommand
 from errors import *
 
@@ -16,6 +17,9 @@ text = {}
 for file_name in os.listdir('./text'):
     with open('./text/' + file_name) as f:
         text[file_name] = f.read().strip()
+
+# Just going to use the default in-memory database for now.
+srm = SavedRollManager()
 
 
 def start_cmd(bot, update):
@@ -48,10 +52,8 @@ def roll_cmd(bot, update, args):
                 'Rolling dice requires at least one argument.')
 
         if args[0][0].isalpha():
-            # TODO: RollCommand.from_saved(args[0])
-            msg_args['text'] = f'Saved roll: {args[0]}'
-        else:
-            msg_args['text'] = str(RollCommand.from_args(args))
+            args = srm.get(args[0], update.message.from_user.id)
+        msg_args['text'] = str(RollCommand.from_args(args))
     except InvalidSyntaxException:
         msg_args['text'] = f"Syntax: {text['syntax']}"
     except FoxRollBotException as e:
