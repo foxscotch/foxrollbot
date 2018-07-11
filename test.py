@@ -165,8 +165,7 @@ class SavedRollManagerTestCase(TestCase):
         cursor = self.conn.cursor()
         cursor.execute(self.srm.sql['save'], {'name': 'example_roll',
                                               'args': '1d20 adv',
-                                              'user': 12345,
-                                              'chat': None})
+                                              'user': 12345})
         self.conn.commit()
 
     def get_db_entries(self):
@@ -176,23 +175,20 @@ class SavedRollManagerTestCase(TestCase):
         return len(results), results
 
     def test_save(self):
-        self.srm.save('test_roll', ['4d6', 'x2'], chat=54321)
+        self.srm.save('test_roll', ['4d6', 'x2'], 54321)
         length, results = self.get_db_entries()
         self.assertEqual(length, 2)
-        self.assertIn((1, 'example_roll', '1d20 adv', 12345, None), results)
-        self.assertIn((2, 'test_roll', '4d6 x2', None, 54321), results)
+        self.assertIn((1, 'example_roll', '1d20 adv', 12345), results)
+        self.assertIn((2, 'test_roll', '4d6 x2', 54321), results)
 
     def test_get(self):
-        args = self.srm.get('example_roll', user=12345)
+        args = self.srm.get('example_roll', 12345)
         self.assertEqual(args, ['1d20', 'adv'])
 
     def test_delete(self):
-        self.srm.delete('example_roll', user=12345)
+        self.srm.delete('example_roll', 12345)
         length = self.get_db_entries()[0]
         self.assertEqual(length, 0)
-    
-    def tearDown(self):
-        print(self.get_db_entries()[1])
 
 
 if __name__ == '__main__':
