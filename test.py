@@ -74,7 +74,7 @@ class RollTestCase(TestCase):
         self.assertEqual(r1, r2)
     
     def test_simple_roll_output(self):
-        roll = Roll([Dice(1, 20)], [], Roll.NORMAL)
+        roll = Roll([Dice(1, 20)], [])
         result = roll.roll()
         expected_output = '1d20: 5'
         self.assertEqual(str(result), expected_output)
@@ -110,18 +110,18 @@ class RollTestCase(TestCase):
         dice = Dice(1, 20)
         modifiers = [1] * Roll.MAX_COMPONENTS
         self.assertRaises(TooManyComponentsException,
-                          lambda: Roll([dice], modifiers, Roll.NORMAL))
+                          lambda: Roll([dice], modifiers))
     
     def test_disallows_small_modifier(self):
         dice = Dice(1, 20)
         self.assertRaises(OutOfRangeException,
-                          lambda: Roll([dice], [0], Roll.NORMAL))
+                          lambda: Roll([dice], [0]))
     
     def test_disallows_large_modifier(self):
         dice = Dice(1, 20)
         modifier = Roll.MAX_MODIFIER + 1
         self.assertRaises(OutOfRangeException,
-                          lambda: Roll([dice], [modifier], Roll.NORMAL))
+                          lambda: Roll([dice], [modifier]))
     
     def test_allows_negative_modifier(self):
         try:
@@ -137,7 +137,7 @@ class RollTestCase(TestCase):
         d3 = Dice(4, 6)
 
         r1 = Roll([d1, d2, d3], [5, -2])
-        r2 = Roll(r1.rolls, r1.modifiers, r1.advantage)
+        r2 = Roll(r1.rolls, r1.modifiers)
         r3 = Roll([d1, d3], [1, 6], Roll.ADVANTAGE)
 
         self.assertEqual(r1, r2)
@@ -158,7 +158,7 @@ class RollCommandTestCase(TestCase):
         self.assertEqual(str(rc), expected_output)
     
     def test_disallows_too_many_rolls(self):
-        roll = Roll([Dice(1, 20)], [], Roll.NORMAL)
+        roll = Roll([Dice(1, 20)], [])
         rolls = [roll] * (Roll.MAX_COMPONENTS + 1)
         self.assertRaises(TooManyComponentsException,
                           lambda: RollCommand(rolls))
