@@ -163,12 +163,15 @@ class SavedRollManagerTestCase(TestCase):
 
         # Insert example entry
         cursor = self.conn.cursor()
-        cursor.execute('INSERT INTO saved_rolls VALUES (?, ?, ?, ?, ?);'
-                       None, 'example_roll', '1d20 adv', 12345, None)
+        cursor.execute(self.srm.sql['save'], {'name': 'example_roll',
+                                              'args': '1d20 adv',
+                                              'user': 12345,
+                                              'chat': None})
+        self.conn.commit()
 
     def get_db_entries(self):
         cursor = self.conn.cursor()
-        cursor.execute('SELECT * FROM saved_rolls;')
+        cursor.execute(self.srm.sql['select_all'])
         results = cursor.fetchall()
         return len(results), results
 
@@ -176,18 +179,20 @@ class SavedRollManagerTestCase(TestCase):
         self.srm.save('test_roll', ['4d6', 'x2'], chat=54321)
         length, results = self.get_db_entries()
         self.assertEqual(length, 2)
-        self.assertEqual(results[0], (1, 'test_roll', '4d6 x2', None, 54321))
+        self.assertIn((1, 'example_roll', '1d20 adv', 12345, None), results)
+        self.assertIn((2, 'test_roll', '4d6 x2', None, 54321), results)
 
     def test_get(self):
-        self.test_save()
         args = self.srm.get('example_roll', user=12345)
         self.assertEqual(args, ['1d20', 'adv'])
 
     def test_delete(self):
-        self.test_save()
-        self.srm.delete('test_roll', user=12345)
+        self.srm.delete('example_roll', user=12345)
         length = self.get_db_entries()[0]
         self.assertEqual(length, 0)
+    
+    def tearDown(self):
+        print(self.get_db_entries()[1])
 
 
 if __name__ == '__main__':
