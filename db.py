@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from pathlib import Path
 
 from jinja2 import Template
@@ -18,14 +19,20 @@ class SavedRollManager:
     TABLE = 'saved_rolls'
     """str: Name of table in which to store saved rolls"""
 
-    def __init__(self, connection):
+    def __init__(self, connection=None):
         """
         Create a SavedRollManager instance.
+
+        If a connection is not passed, it will use a new in-memory database.
 
         Args:
             connection (sqlite3.Connection): Database connection to use
         """
+        if connection is None:
+            self.connection = sqlite3.connect(':memory:')
+        else:
         self.connection = connection
+
         self._load_statements()
         self._init_db()
 

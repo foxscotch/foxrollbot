@@ -1,5 +1,4 @@
 import random
-import sqlite3
 from unittest import TestCase, main
 
 from db import SavedRollManager
@@ -166,15 +165,14 @@ class RollCommandTestCase(TestCase):
 
 class SavedRollManagerTestCase(TestCase):
     def setUp(self):
-        self.conn = sqlite3.connect(':memory:')
-        self.srm = SavedRollManager(self.conn)
+        self.srm = SavedRollManager()
 
         # Insert example entry
-        cursor = self.conn.cursor()
+        cursor = self.srm.connection.cursor()
         cursor.execute(self.srm.sql['save'], {'name': 'example_roll',
                                               'args': '1d20 adv',
                                               'user': 12345})
-        self.conn.commit()
+        self.srm.connection.commit()
 
     def get_db_entries(self):
         cursor = self.conn.cursor()
