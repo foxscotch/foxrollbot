@@ -161,26 +161,33 @@ class SavedRollManagerTestCase(TestCase):
         self.conn = sqlite3.connect(':memory:')
         self.srm = SavedRollManager(self.conn)
 
-    def test_save(self):
-        self.srm.save('test_roll', ['1d20', 'adv'], user=12345)
+        # Insert example entry
+        cursor = self.conn.cursor()
+        cursor.execute('INSERT INTO saved_rolls VALUES (?, ?, ?, ?, ?);'
+                       None, 'example_roll', '1d20 adv', 12345, None)
+
+    def get_db_entries(self):
         cursor = self.conn.cursor()
         cursor.execute('SELECT * FROM saved_rolls;')
         results = cursor.fetchall()
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0], (1, 'test_roll', '1d20 adv', 12345, None))
+        return len(results), results
+
+    def test_save(self):
+        self.srm.save('test_roll', ['4d6', 'x2'], chat=54321)
+        length, results = self.get_db_entries()
+        self.assertEqual(length, 2)
+        self.assertEqual(results[0], (1, 'test_roll', '4d6 x2', None, 54321))
 
     def test_get(self):
         self.test_save()
-        args = self.srm.get('test_roll', user=12345)
+        args = self.srm.get('example_roll', user=12345)
         self.assertEqual(args, ['1d20', 'adv'])
 
     def test_delete(self):
         self.test_save()
         self.srm.delete('test_roll', user=12345)
-        cursor = self.conn.cursor()
-        cursor.execute('SELECT * FROM saved_rolls;')
-        results = cursor.fetchall()
-        self.assertEqual(len(results), 0)
+        length = self.get_db_entries()[0]
+        self.assertEqual(length, 0)
 
 
 if __name__ == '__main__':
