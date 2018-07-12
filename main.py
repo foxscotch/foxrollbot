@@ -6,6 +6,7 @@ from telegram.ext.updater import Updater
 
 from db import SavedRollManager
 from roll import RollCommand, Dice
+from text import Text
 from errors import *
 
 
@@ -13,10 +14,7 @@ logging.basicConfig(level=logging.INFO,  # filename='log.txt',
                     format='%(asctime)s %(name)s %(levelname)s: %(message)s')
 
 
-text = {}
-for file_name in os.listdir('./text'):
-    with open('./text/' + file_name) as f:
-        text[file_name] = f.read().strip()
+text = Text('./text')
 
 # Just going to use the default in-memory database for now.
 srm = SavedRollManager()
@@ -24,19 +22,19 @@ srm = SavedRollManager()
 
 def start_cmd(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
-                     text=text['start'])
+                     text=text.start)
 
 
 def about_cmd(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      parse_mode='Markdown',
-                     text=text['about'])
+                     text=text.about)
 
 
 def help_cmd(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      parse_mode='Markdown',
-                     text=text['help'])
+                     text=text.help)
 
 
 def roll_cmd(bot, update, args):
@@ -55,7 +53,7 @@ def roll_cmd(bot, update, args):
         else:
             msg_args['text'] = str(RollCommand.from_args(args))
     except InvalidSyntaxException:
-        msg_args['text'] = f"Syntax: {text['roll_syntax']}"
+        msg_args['text'] = f"Syntax: {text.roll_syntax}"
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
 
@@ -73,7 +71,7 @@ def save_cmd(bot, update, args):
         srm.save(args[0], args[1:], update.message.from_user.id)
         msg_args['text'] = f"Roll successfully saved as `{args[0]}`!"
     except InvalidSyntaxException:
-        msg_args['text'] = f"Syntax: {text['save_syntax']}"
+        msg_args['text'] = f"Syntax: {text.save_syntax}"
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
 
