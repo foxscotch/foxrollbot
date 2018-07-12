@@ -13,7 +13,7 @@ class SavedRollManager:
     Class for managing saved rolls.
 
     Attributes:
-        connection (sqlite3.Connection): Database connection used by manager
+        db (str): URI of database used for connections
     """
 
     TABLE = 'saved_rolls'
@@ -26,12 +26,17 @@ class SavedRollManager:
         If a connection is not passed, it will use a new in-memory database.
 
         Args:
-            connection (sqlite3.Connection): Database connection to use
+            db (str): URI of database to connect to
         """
         if db is None:
-            self.db = 'temp.db'
+            self.db = 'file:foxrollbot_db?mode=memory&cache=shared'
         else:
             self.db = db
+
+        # This attribute is used to maintain a single connection to the
+        # database, so that in-memory databases aren't just lost after every
+        # connection is finished.
+        self._main_connection = sqlite3.connect(self.db, uri=True)
 
         self._load_statements()
         self._init_db()
@@ -41,10 +46,9 @@ class SavedRollManager:
         Ensure that the database is set up correctly, initializing it if
         necessary.
         """
-        connection = sqlite3.connect(self.db)
-        cursor = connection.cursor()
+        cursor = self._main_connection.cursor()
         cursor.execute(self.sql['create_table'])
-        connection.commit()
+        self._main_connection.commit()
     
     def _load_statements(self):
         """Load SQL statements from the ./sql directory."""
@@ -55,6 +59,9 @@ class SavedRollManager:
             with open(path) as f:
                 template = Template(f.read().strip())
                 self.sql[path.stem] = template.render(context)
+    
+    def connect(self):
+        return sqlite3.connect(self.db, uri=True)
 
     def save(self, name, args, user):
         """
@@ -68,7 +75,7 @@ class SavedRollManager:
         # Make sure the given arguments are valid first.
         RollCommand.from_args(args)
 
-        connection = sqlite3.connect(self.db)
+        connection = self.connect()
         cursor = connection.cursor()
         cursor.execute(self.sql['save'], {'name': name,
                                           'args': ' '.join(args),
@@ -86,7 +93,7 @@ class SavedRollManager:
         Returns:
             list: List of arguments of saved roll
         """
-        connection = sqlite3.connect(self.db)
+        connection = self.connect()
         cursor = connection.cursor()
         cursor.execute(self.sql['get'], {'name': name,
                                          'user': user})
@@ -105,7 +112,7 @@ class SavedRollManager:
             name (str): Name of saved roll
             user (int): User ID to delete roll from
         """
-        connection = sqlite3.connect(self.db)
+        connection = self.connect()
         cursor = connection.cursor()
         cursor.execute(self.sql['delete'], {'name': name,
                                             'user': user})

@@ -55,7 +55,7 @@ def roll_cmd(bot, update, args):
             args = srm.get(args[0], update.message.from_user.id)
         msg_args['text'] = str(RollCommand.from_args(args))
     except InvalidSyntaxException:
-        msg_args['text'] = f"Syntax: {text['syntax']}"
+        msg_args['text'] = f"Syntax: {text['roll_syntax']}"
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
 
@@ -73,7 +73,7 @@ def save_cmd(bot, update, args):
         srm.save(args[0], args[1:], update.message.from_user.id)
         msg_args['text'] = f"Roll successfully saved as `{args[0]}`!"
     except InvalidSyntaxException:
-        msg_args['text'] = f"Syntax: `<saved_name>` {text['syntax']}"
+        msg_args['text'] = f"Syntax: {text['save_syntax']}"
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
 

@@ -174,18 +174,15 @@ class SavedRollManagerTestCase(TestCase):
         self.srm = SavedRollManager()
 
         # Insert example entry
-        connection = sqlite3.connect(self.srm.db)
+        connection = self.srm.connect()
         cursor = connection.cursor()
         cursor.execute(self.srm.sql['save'], {'name': 'example_roll',
                                               'args': '1d20 adv',
                                               'user': 12345})
         connection.commit()
-    
-    def tearDown(self):
-        os.remove(self.srm.db)
 
     def get_db_entries(self):
-        connection = sqlite3.connect(self.srm.db)
+        connection = self.srm.connect()
         cursor = connection.cursor()
         cursor.execute(self.srm.sql['select_all'])
         results = cursor.fetchall()
