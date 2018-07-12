@@ -62,6 +62,40 @@ def roll_cmd(bot, update, args):
     bot.send_message(**msg_args)
 
 
+def save_cmd(bot, update, args):
+    msg_args = {
+        'chat_id': update.message.chat_id,
+        'reply_to_message_id': update.message.message_id,
+        'parse_mode': 'Markdown'
+    }
+
+    try:
+        srm.save(args[0], args[1:], update.message.from_user.id)
+        msg_args['text'] = f"Roll successfully saved as `{args[0]}`!"
+    except InvalidSyntaxException:
+        msg_args['text'] = f"Syntax: `<saved_name>` {text['syntax']}"
+    except FoxRollBotException as e:
+        msg_args['text'] = str(e)
+
+    bot.send_message(**msg_args)
+
+
+def delete_cmd(bot, update, args):
+    msg_args = {
+        'chat_id': update.message.chat_id,
+        'reply_to_message_id': update.message.message_id,
+        'parse_mode': 'Markdown'
+    }
+
+    try:
+        srm.delete(args[0], update.message.from_user.id)
+        msg_args['text'] = f"Successfully deleted `{args[0]}`."
+    except FoxRollBotException as e:
+        msg_args['text'] = str(e)
+
+    bot.send_message(**msg_args)
+
+
 def test(bot, update):
     # Only reply if @foxscotch sent the message
     if update.message.from_user.id == 136418592:
@@ -87,6 +121,8 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler('about', about_cmd))
     dispatcher.add_handler(CommandHandler('help', help_cmd))
     dispatcher.add_handler(CommandHandler('roll', roll_cmd, pass_args=True))
+    dispatcher.add_handler(CommandHandler('save', save_cmd, pass_args=True))
+    dispatcher.add_handler(CommandHandler('delete', delete_cmd, pass_args=True))
 
     dispatcher.add_handler(MessageHandler(None, test))
 

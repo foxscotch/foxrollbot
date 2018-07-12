@@ -1,4 +1,6 @@
+import os
 import random
+import sqlite3
 from unittest import TestCase, main
 
 from db import SavedRollManager
@@ -172,14 +174,19 @@ class SavedRollManagerTestCase(TestCase):
         self.srm = SavedRollManager()
 
         # Insert example entry
-        cursor = self.srm.connection.cursor()
+        connection = sqlite3.connect(self.srm.db)
+        cursor = connection.cursor()
         cursor.execute(self.srm.sql['save'], {'name': 'example_roll',
                                               'args': '1d20 adv',
                                               'user': 12345})
-        self.srm.connection.commit()
+        connection.commit()
+    
+    def tearDown(self):
+        os.remove(self.srm.db)
 
     def get_db_entries(self):
-        cursor = self.srm.connection.cursor()
+        connection = sqlite3.connect(self.srm.db)
+        cursor = connection.cursor()
         cursor.execute(self.srm.sql['select_all'])
         results = cursor.fetchall()
         return len(results), results

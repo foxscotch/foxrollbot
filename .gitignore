@@ -2,6 +2,7 @@ __pycache__
 
 token.txt
 log.txt
+temp.db
 
 .idea
 .vscode

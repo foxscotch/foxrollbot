@@ -19,7 +19,7 @@ class SavedRollManager:
     TABLE = 'saved_rolls'
     """str: Name of table in which to store saved rolls"""
 
-    def __init__(self, connection=None):
+    def __init__(self, db=None):
         """
         Create a SavedRollManager instance.
 
@@ -28,10 +28,10 @@ class SavedRollManager:
         Args:
             connection (sqlite3.Connection): Database connection to use
         """
-        if connection is None:
-            self.connection = sqlite3.connect(':memory:')
+        if db is None:
+            self.db = 'temp.db'
         else:
-            self.connection = connection
+            self.db = db
 
         self._load_statements()
         self._init_db()
@@ -41,9 +41,10 @@ class SavedRollManager:
         Ensure that the database is set up correctly, initializing it if
         necessary.
         """
-        cursor = self.connection.cursor()
+        connection = sqlite3.connect(self.db)
+        cursor = connection.cursor()
         cursor.execute(self.sql['create_table'])
-        self.connection.commit()
+        connection.commit()
     
     def _load_statements(self):
         """Load SQL statements from the ./sql directory."""
@@ -67,11 +68,12 @@ class SavedRollManager:
         # Make sure the given arguments are valid first.
         RollCommand.from_args(args)
 
-        cursor = self.connection.cursor()
+        connection = sqlite3.connect(self.db)
+        cursor = connection.cursor()
         cursor.execute(self.sql['save'], {'name': name,
                                           'args': ' '.join(args),
                                           'user': user})
-        self.connection.commit()
+        connection.commit()
 
     def get(self, name, user):
         """
@@ -84,7 +86,8 @@ class SavedRollManager:
         Returns:
             list: List of arguments of saved roll
         """
-        cursor = self.connection.cursor()
+        connection = sqlite3.connect(self.db)
+        cursor = connection.cursor()
         cursor.execute(self.sql['get'], {'name': name,
                                          'user': user})
         result = cursor.fetchone()
@@ -102,10 +105,11 @@ class SavedRollManager:
             name (str): Name of saved roll
             user (int): User ID to delete roll from
         """
-        cursor = self.connection.cursor()
+        connection = sqlite3.connect(self.db)
+        cursor = connection.cursor()
         cursor.execute(self.sql['delete'], {'name': name,
                                             'user': user})
         if cursor.rowcount < 1:
             raise DoesNotExistException(
                 'Could not find an applicable saved roll with that name.')
-        self.connection.commit()
+        connection.commit()
