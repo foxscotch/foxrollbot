@@ -105,4 +105,7 @@ class SavedRollManager:
         cursor = self.connection.cursor()
         cursor.execute(self.sql['delete'], {'name': name,
                                             'user': user})
+        if cursor.rowcount < 1:
+            raise DoesNotExistException(
+                'Could not find an applicable saved roll with that name.')
         self.connection.commit()
