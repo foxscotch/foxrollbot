@@ -179,7 +179,7 @@ class SavedRollManagerTestCase(TestCase):
         self.srm.connection.commit()
 
     def get_db_entries(self):
-        cursor = self.conn.cursor()
+        cursor = self.srm.connection.cursor()
         cursor.execute(self.srm.sql['select_all'])
         results = cursor.fetchall()
         return len(results), results
@@ -190,15 +190,6 @@ class SavedRollManagerTestCase(TestCase):
         self.assertEqual(length, 2)
         self.assertIn((1, 'example_roll', '1d20 adv', 12345), results)
         self.assertIn((2, 'test_roll', '4d6 x2', 54321), results)
-
-    def test_get(self):
-        args = self.srm.get('example_roll', 12345)
-        self.assertEqual(args, ['1d20', 'adv'])
-
-    def test_delete(self):
-        self.srm.delete('example_roll', 12345)
-        length = self.get_db_entries()[0]
-        self.assertEqual(length, 0)
     
     def test_update(self):
         self.srm.save('example_roll', ['4d6', 'x2'], 12345)
@@ -207,6 +198,23 @@ class SavedRollManagerTestCase(TestCase):
     def test_invalid_roll(self):
         self.assertRaises(InvalidSyntaxException,
                           lambda: self.srm.save('test_roll', ['adv'], 12345))
+
+    def test_get(self):
+        args = self.srm.get('example_roll', 12345)
+        self.assertEqual(args, ['1d20', 'adv'])
+    
+    def test_get_throws_on_nonexistent_roll(self):
+        self.assertRaises(DoesNotExistException,
+                          lambda: self.srm.get('nothing', 12345))
+
+    def test_delete(self):
+        self.srm.delete('example_roll', 12345)
+        length = self.get_db_entries()[0]
+        self.assertEqual(length, 0)
+    
+    def test_delete_throws_on_nonexistent_roll(self):
+        self.assertRaises(DoesNotExistException,
+                          lambda: self.srm.delete('nothing', 12345))
 
 
 if __name__ == '__main__':
