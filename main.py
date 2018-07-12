@@ -5,7 +5,7 @@ from telegram.ext import CommandHandler, MessageHandler
 from telegram.ext.updater import Updater
 
 from db import SavedRollManager
-from roll import RollCommand
+from roll import RollCommand, Dice
 from errors import *
 
 
@@ -48,12 +48,12 @@ def roll_cmd(bot, update, args):
 
     try:
         if len(args) < 1:
-            raise NotEnoughArgumentsException(
-                'Rolling dice requires at least one argument.')
-
-        if args[0][0].isalpha():
-            args = srm.get(args[0], update.message.from_user.id)
-        msg_args['text'] = str(RollCommand.from_args(args))
+            msg_args['text'] = str(Dice(1, 20).roll())
+        elif args[0][0].isalpha():
+            saved_args = srm.get(args[0], update.message.from_user.id)
+            msg_args['text'] = str(RollCommand.from_args(saved_args))
+        else:
+            msg_args['text'] = str(RollCommand.from_args(args))
     except InvalidSyntaxException:
         msg_args['text'] = f"Syntax: {text['roll_syntax']}"
     except FoxRollBotException as e:
