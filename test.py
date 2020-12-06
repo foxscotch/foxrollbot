@@ -80,6 +80,22 @@ class RollTestCase(TestCase):
         expected_output = '1d20: 5'
         self.assertEqual(str(result), expected_output)
     
+    def test_simple_roll_output_with_modifier(self):
+        roll = Roll([Dice(1, 20)], [4])
+        result = roll.roll()
+        expected_output = ('Total: 9\n'
+                           '1d20: 5\n'
+                           'Modifier: 4')
+        self.assertEqual(str(result), expected_output)
+    
+    def test_simple_roll_output_with_multiple_modifiers(self):
+        roll = Roll([Dice(1, 20)], [2, 4])
+        result = roll.roll()
+        expected_output = ('Total: 11\n'
+                           '1d20: 5\n'
+                           'Modifiers: 6 | 2, 4')
+        self.assertEqual(str(result), expected_output)
+    
     def test_simple_roll_output_with_advantage(self):
         roll = Roll([Dice(1, 20)], [], Roll.ADVANTAGE)
         result = roll.roll()

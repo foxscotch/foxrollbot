@@ -200,15 +200,17 @@ class RollResult:
         if roll_count == 1 and mod_count == 0 and self.losing is None:
             return str(self.rolls[0])
 
-        total = f'Total: {self.total}\n' if roll_count > 1 else ''
+        total = f'Total: {self.total}\n' if roll_count + mod_count > 1 else ''
         roll = '\n'.join(str(r) for r in self.rolls)
 
         if len(self.modifiers) == 0:
             output += total + roll
         elif len(self.modifiers) == 1:
+            output += total + roll
             output += f'\nModifier: {self.mod_total}'
         else:
             modifiers = ', '.join(str(m) for m in self.modifiers)
+            output += total + roll
             output += f'\nModifiers: {self.mod_total} | {modifiers}'
 
         if self.losing is None:
