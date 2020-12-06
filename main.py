@@ -20,24 +20,24 @@ text = Text('./text')
 srm = SavedRollManager()
 
 
-def start_cmd(bot, update):
-    bot.send_message(chat_id=update.message.chat_id,
-                     text=text.start)
+def start_cmd(update, ctx):
+    ctx.bot.send_message(chat_id=update.message.chat_id,
+                         text=text.start)
 
 
-def about_cmd(bot, update):
-    bot.send_message(chat_id=update.message.chat_id,
-                     parse_mode='Markdown',
-                     text=text.about)
+def about_cmd(update, ctx):
+    ctx.bot.send_message(chat_id=update.message.chat_id,
+                         parse_mode='Markdown',
+                         text=text.about)
 
 
-def help_cmd(bot, update):
-    bot.send_message(chat_id=update.message.chat_id,
-                     parse_mode='Markdown',
-                     text=text.help)
+def help_cmd(update, ctx):
+    ctx.bot.send_message(chat_id=update.message.chat_id,
+                         parse_mode='Markdown',
+                         text=text.help)
 
 
-def roll_cmd(bot, update, args):
+def roll_cmd(update, ctx):
     msg_args = {
         'chat_id': update.message.chat_id,
         'reply_to_message_id': update.message.message_id,
@@ -45,22 +45,22 @@ def roll_cmd(bot, update, args):
     }
 
     try:
-        if len(args) < 1:
+        if len(ctx.args) < 1:
             msg_args['text'] = str(Dice(1, 20).roll())
-        elif args[0][0].isalpha():
-            saved_args = srm.get(args[0], update.message.from_user.id)
+        elif ctx.args[0][0].isalpha():
+            saved_args = srm.get(ctx.args[0], update.message.from_user.id)
             msg_args['text'] = str(RollCommand.from_args(saved_args))
         else:
-            msg_args['text'] = str(RollCommand.from_args(args))
+            msg_args['text'] = str(RollCommand.from_args(ctx.args))
     except InvalidSyntaxException:
         msg_args['text'] = f"Syntax: {text.roll_syntax}"
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
 
-    bot.send_message(**msg_args)
+    ctx.bot.send_message(**msg_args)
 
 
-def save_cmd(bot, update, args):
+def save_cmd(update, ctx):
     msg_args = {
         'chat_id': update.message.chat_id,
         'reply_to_message_id': update.message.message_id,
@@ -68,17 +68,17 @@ def save_cmd(bot, update, args):
     }
 
     try:
-        srm.save(args[0], args[1:], update.message.from_user.id)
-        msg_args['text'] = f"Roll successfully saved as `{args[0]}`!"
+        srm.save(ctx.args[0], ctx.args[1:], update.message.from_user.id)
+        msg_args['text'] = f"Roll successfully saved as `{ctx.args[0]}`!"
     except InvalidSyntaxException:
         msg_args['text'] = f"Syntax: {text.save_syntax}"
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
 
-    bot.send_message(**msg_args)
+    ctx.bot.send_message(**msg_args)
 
 
-def delete_cmd(bot, update, args):
+def delete_cmd(update, ctx):
     msg_args = {
         'chat_id': update.message.chat_id,
         'reply_to_message_id': update.message.message_id,
@@ -86,26 +86,26 @@ def delete_cmd(bot, update, args):
     }
 
     try:
-        srm.delete(args[0], update.message.from_user.id)
-        msg_args['text'] = f"Successfully deleted `{args[0]}`."
+        srm.delete(ctx.args[0], update.message.from_user.id)
+        msg_args['text'] = f"Successfully deleted `{ctx.args[0]}`."
     except FoxRollBotException as e:
         msg_args['text'] = str(e)
 
-    bot.send_message(**msg_args)
+    ctx.bot.send_message(**msg_args)
 
 
-def test(bot, update):
+def test(update, ctx):
     # Only reply if @foxscotch sent the message
     if update.message.from_user.id == 136418592:
         import json
         msg = json.dumps(update.message.to_dict(), indent=True)
-        bot.send_message(chat_id=update.message.chat_id,
-                         parse_mode='Markdown',
-                         text=f'```{msg}```')
+        ctx.bot.send_message(chat_id=update.message.chat_id,
+                             parse_mode='Markdown',
+                             text=f'```{msg}```')
 
 
-def error_callback(bot, update, error):
-    logging.error(error)
+def error_callback(update, ctx):
+    logging.error(ctx.error)
 
 
 if __name__ == '__main__':
