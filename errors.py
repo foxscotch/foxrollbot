@@ -21,5 +21,6 @@ class OutOfRangeException(FoxRollBotException):
 class TooManyComponentsException(FoxRollBotException):
     pass
 
+
 class DoesNotExistException(FoxRollBotException):
     pass

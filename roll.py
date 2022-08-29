@@ -6,7 +6,7 @@ from errors import *
 
 
 class Dice:
-    SYNTAX = re.compile(r'[+-]?(\d+)d(\d+)')
+    SYNTAX = re.compile(r"[+-]?(\d+)d(\d+)")
 
     MAX_DICE = 100
     MAX_SIDES = 1000
@@ -14,10 +14,12 @@ class Dice:
     def __init__(self, quantity, die, negative=False):
         if quantity < 1 or quantity > self.MAX_DICE:
             raise OutOfRangeException(
-                f'Number of dice must be between 1 and {self.MAX_DICE}.')
+                f"Number of dice must be between 1 and {self.MAX_DICE}."
+            )
         if die < 2 or die > self.MAX_SIDES:
             raise OutOfRangeException(
-                f'Number of sides must be between 2 and {self.MAX_SIDES}.')
+                f"Number of sides must be between 2 and {self.MAX_SIDES}."
+            )
 
         self.quantity = quantity
         self.die = die
@@ -25,18 +27,18 @@ class Dice:
 
     @classmethod
     def from_str(cls, roll_str):
-        if roll_str.startswith('+') or roll_str.startswith('-'):
+        if roll_str.startswith("+") or roll_str.startswith("-"):
             sign = roll_str[0]
             roll_str = roll_str[1:]
         else:
-            sign = '+'
+            sign = "+"
 
         match = cls.SYNTAX.fullmatch(roll_str)
 
         if match:
             quantity = int(match.group(1))
             die = int(match.group(2))
-            return cls(quantity, die, sign == '-')
+            return cls(quantity, die, sign == "-")
         else:
             raise InvalidSyntaxException()
 
@@ -47,9 +49,9 @@ class Dice:
         return DiceResult(self, results, self.negative)
 
     def __str__(self):
-        sign = '-' if self.negative else ''
-        return f'{sign}{self.quantity}d{self.die}'
-    
+        sign = "-" if self.negative else ""
+        return f"{sign}{self.quantity}d{self.die}"
+
     def __eq__(self, other):
         try:
             quantity = self.quantity == other.quantity
@@ -67,28 +69,27 @@ class DiceResult:
         self.results = results
 
     def __str__(self):
-        sep = ' | ' if len(self.results) > 1 else ''
+        sep = " | " if len(self.results) > 1 else ""
         if len(self.results) > 1:
-            ind_results = ', '.join(str(r) for r in self.results)
+            ind_results = ", ".join(str(r) for r in self.results)
         else:
-            ind_results = ''
-        return f'{self.dice}: {sum(self.results)}{sep}{ind_results}'
-    
+            ind_results = ""
+        return f"{self.dice}: {sum(self.results)}{sep}{ind_results}"
+
     def __add__(self, other):
         if type(other) == int:
             return sum(self.results) + other
         else:
             return sum(self.results) + sum(other.results)
-    
+
     def __radd__(self, other):
         return self.__add__(other)
-    
+
     def __eq__(self, other):
         return sum(self.results) == sum(other.results)
-    
+
     def __lt__(self, other):
         return sum(self.results) < sum(other.results)
-
 
 
 class Roll:
@@ -96,7 +97,7 @@ class Roll:
     ADVANTAGE = 1
     DISADVANTAGE = 2
 
-    SYNTAX = re.compile(r'(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*')
+    SYNTAX = re.compile(r"(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*")
 
     MAX_COMPONENTS = 25
     MAX_MODIFIER = 1000
@@ -105,13 +106,15 @@ class Roll:
         components = len(rolls) + len(modifiers)
         if components < 1 or components > self.MAX_COMPONENTS:
             raise TooManyComponentsException(
-                f'Rolls may only have up to {self.MAX_COMPONENTS} components.')
+                f"Rolls may only have up to {self.MAX_COMPONENTS} components."
+            )
 
         for modifier in modifiers:
             if modifier == 0 or abs(modifier) > self.MAX_MODIFIER:
                 raise OutOfRangeException(
-                    'Modifiers must be non-zero integer with an absolute value ' 
-                    f'less than {self.MAX_MODIFIER}.')
+                    "Modifiers must be non-zero integer with an absolute value "
+                    f"less than {self.MAX_MODIFIER}."
+                )
 
         self.rolls = rolls
         self.modifiers = modifiers
@@ -120,7 +123,7 @@ class Roll:
     @classmethod
     def from_str(cls, roll_str, advantage=NORMAL):
         if cls.SYNTAX.fullmatch(roll_str):
-            components = re.sub(r'([+-])', r' \g<1>', '+' + roll_str).split()
+            components = re.sub(r"([+-])", r" \g<1>", "+" + roll_str).split()
             rolls = []
             modifiers = []
 
@@ -157,10 +160,11 @@ class Roll:
                 return RollResult(lesser, self.modifiers, sum(greater))
         else:
             return RollResult(results, self.modifiers, None)
-    
+
     def __eq__(self, other):
-        pairs = list(zip(self.rolls, other.rolls)) \
-              + list(zip(self.modifiers, other.modifiers))
+        pairs = list(zip(self.rolls, other.rolls)) + list(
+            zip(self.modifiers, other.modifiers)
+        )
 
         try:
             if self.advantage != other.advantage:
@@ -193,30 +197,30 @@ class RollResult:
         self.losing = losing
 
     def __str__(self):
-        output = ''
+        output = ""
 
         roll_count = len(self.rolls)
         mod_count = len(self.modifiers)
         if roll_count == 1 and mod_count == 0 and self.losing is None:
             return str(self.rolls[0])
 
-        total = f'Total: {self.total}\n' if roll_count + mod_count > 1 else ''
-        roll = '\n'.join(str(r) for r in self.rolls)
+        total = f"Total: {self.total}\n" if roll_count + mod_count > 1 else ""
+        roll = "\n".join(str(r) for r in self.rolls)
 
         if len(self.modifiers) == 0:
             output += total + roll
         elif len(self.modifiers) == 1:
             output += total + roll
-            output += f'\nModifier: {self.mod_total}'
+            output += f"\nModifier: {self.mod_total}"
         else:
-            modifiers = ', '.join(str(m) for m in self.modifiers)
+            modifiers = ", ".join(str(m) for m in self.modifiers)
             output += total + roll
-            output += f'\nModifiers: {self.mod_total} | {modifiers}'
+            output += f"\nModifiers: {self.mod_total} | {modifiers}"
 
         if self.losing is None:
             return output
         else:
-            return output + f'\nOther roll: {self.losing}'
+            return output + f"\nOther roll: {self.losing}"
 
 
 class RollCommand:
@@ -225,47 +229,40 @@ class RollCommand:
     def __init__(self, rolls):
         if len(rolls) > self.MAX_ROLLS:
             raise TooManyComponentsException(
-                f'There is a maximum of {self.MAX_ROLLS} individual rolls per '
-                'command.')
+                f"There is a maximum of {self.MAX_ROLLS} individual rolls per "
+                "command."
+            )
 
         self.rolls = rolls
-    
+
     @classmethod
     def from_args(cls, args):
         rolls = []
 
-        cur_roll = {
-            'roll': None,
-            'adv': Roll.NORMAL,
-            'qty': 1
-        }
+        cur_roll = {"roll": None, "adv": Roll.NORMAL, "qty": 1}
 
         for arg in args:
             if arg[0].isdigit():
-                if cur_roll['roll'] is not None:
-                    roll = Roll.from_str(cur_roll['roll'], cur_roll['adv'])
-                    rolls += [roll] * cur_roll['qty']
-                cur_roll = {
-                    'roll': arg,
-                    'adv': Roll.NORMAL,
-                    'qty': 1
-                }
-            elif cur_roll['roll'] is None:
+                if cur_roll["roll"] is not None:
+                    roll = Roll.from_str(cur_roll["roll"], cur_roll["adv"])
+                    rolls += [roll] * cur_roll["qty"]
+                cur_roll = {"roll": arg, "adv": Roll.NORMAL, "qty": 1}
+            elif cur_roll["roll"] is None:
                 raise InvalidSyntaxException()
-            elif arg[0] == 'x' and arg[1:].isnumeric():
-                cur_roll['qty'] = int(arg[1:])
+            elif arg[0] == "x" and arg[1:].isnumeric():
+                cur_roll["qty"] = int(arg[1:])
             else:
-                if 'advantage'.startswith(arg):
-                    cur_roll['adv'] = Roll.ADVANTAGE
-                elif 'disadvantage'.startswith(arg):
-                    cur_roll['adv'] = Roll.DISADVANTAGE
+                if "advantage".startswith(arg):
+                    cur_roll["adv"] = Roll.ADVANTAGE
+                elif "disadvantage".startswith(arg):
+                    cur_roll["adv"] = Roll.DISADVANTAGE
                 else:
                     raise InvalidSyntaxException()
 
-        roll = Roll.from_str(cur_roll['roll'], cur_roll['adv'])
-        rolls += [roll] * cur_roll['qty']
+        roll = Roll.from_str(cur_roll["roll"], cur_roll["adv"])
+        rolls += [roll] * cur_roll["qty"]
 
         return cls(rolls)
-    
+
     def __str__(self):
-        return '\n\n'.join(str(r.roll()) for r in self.rolls)
+        return "\n\n".join(str(r.roll()) for r in self.rolls)

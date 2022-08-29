@@ -16,7 +16,7 @@ class SavedRollManager:
         db (str): URI of database used for connections
     """
 
-    TABLE = 'saved_rolls'
+    TABLE = "saved_rolls"
     """str: Name of table in which to store saved rolls"""
 
     def __init__(self, db=None):
@@ -29,7 +29,7 @@ class SavedRollManager:
             db (str): URI of database to connect to
         """
         if db is None:
-            self.db = 'file:foxrollbot_db?mode=memory&cache=shared'
+            self.db = "file:foxrollbot_db?mode=memory&cache=shared"
         else:
             self.db = db
 
@@ -47,19 +47,19 @@ class SavedRollManager:
         necessary.
         """
         cursor = self._main_connection.cursor()
-        cursor.execute(self.sql['create_table'])
+        cursor.execute(self.sql["create_table"])
         self._main_connection.commit()
-    
+
     def _load_statements(self):
         """Load SQL statements from the ./sql directory."""
-        home = Path('.')
-        context = {'table_name': self.TABLE}
+        home = Path(".")
+        context = {"table_name": self.TABLE}
         self.sql = {}
-        for path in home.glob('./sql/*'):
+        for path in home.glob("./sql/*"):
             with open(path) as f:
                 template = Template(f.read().strip())
                 self.sql[path.stem] = template.render(context)
-    
+
     def connect(self):
         return sqlite3.connect(self.db, uri=True)
 
@@ -77,9 +77,9 @@ class SavedRollManager:
 
         connection = self.connect()
         cursor = connection.cursor()
-        cursor.execute(self.sql['save'], {'name': name,
-                                          'args': ' '.join(args),
-                                          'user': user})
+        cursor.execute(
+            self.sql["save"], {"name": name, "args": " ".join(args), "user": user}
+        )
         connection.commit()
 
     def get(self, name, user):
@@ -95,14 +95,14 @@ class SavedRollManager:
         """
         connection = self.connect()
         cursor = connection.cursor()
-        cursor.execute(self.sql['get'], {'name': name,
-                                         'user': user})
+        cursor.execute(self.sql["get"], {"name": name, "user": user})
         result = cursor.fetchone()
         if result is not None:
             return result[0].split()
         else:
             raise DoesNotExistException(
-                'Could not find an applicable saved roll with that name.')
+                "Could not find an applicable saved roll with that name."
+            )
 
     def delete(self, name, user):
         """
@@ -114,9 +114,9 @@ class SavedRollManager:
         """
         connection = self.connect()
         cursor = connection.cursor()
-        cursor.execute(self.sql['delete'], {'name': name,
-                                            'user': user})
+        cursor.execute(self.sql["delete"], {"name": name, "user": user})
         if cursor.rowcount < 1:
             raise DoesNotExistException(
-                'Could not find an applicable saved roll with that name.')
+                "Could not find an applicable saved roll with that name."
+            )
         connection.commit()

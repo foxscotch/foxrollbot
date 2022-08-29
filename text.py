@@ -12,10 +12,11 @@ class Text:
         >>> t = Text('./text')
         >>> print(t.about)
     """
+
     def __init__(self, directory):
         """
         Create a new Text object.
-        
+
         Args:
             directory (str): Directory in which to find text files
         """
@@ -23,7 +24,7 @@ class Text:
         for file_name in os.listdir(directory):
             with open(os.path.join(directory, file_name)) as f:
                 self._texts[file_name] = f.read().strip()
-    
+
     def __getattr__(self, attr):
         if attr in self._texts:
             return self._texts[attr]
