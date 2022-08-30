@@ -1,5 +1,6 @@
 import logging
 import os
+from random import randint
 
 from telegram.ext import CommandHandler, MessageHandler
 from telegram.ext.updater import Updater
@@ -95,15 +96,27 @@ def delete_cmd(update, ctx):
     ctx.bot.send_message(**msg_args)
 
 
-def test(update, ctx):
-    # Only reply if @foxscotch sent the message
-    if update.message.from_user.id == 136418592:
-        import json
+def fate_val_to_string(value):
+    if value > 0:
+        return "+"
+    elif value < 0:
+        return "-"
+    return "/"
 
-        msg = json.dumps(update.message.to_dict(), indent=True)
-        ctx.bot.send_message(
-            chat_id=update.message.chat_id, parse_mode="Markdown", text=f"```{msg}```"
-        )
+
+def fate_cmd(update, ctx):
+    msg_args = {
+        "chat_id": update.message.chat_id,
+        "reply_to_message_id": update.message.message_id,
+    }
+
+    rolls = [randint(-1, 1) for _ in range(4)]
+
+    msg_args[
+        "text"
+    ] = f"Fate: {sum(rolls)} [{''.join(fate_val_to_string(r) for r in rolls)}]"
+
+    ctx.bot.send_message(**msg_args)
 
 
 def error_callback(update, ctx):
@@ -120,11 +133,12 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler("start", start_cmd))
     dispatcher.add_handler(CommandHandler("about", about_cmd))
     dispatcher.add_handler(CommandHandler("help", help_cmd))
-    dispatcher.add_handler(CommandHandler("roll", roll_cmd, pass_args=True))
+    dispatcher.add_handler(CommandHandler(["roll", "r"], roll_cmd, pass_args=True))
     dispatcher.add_handler(CommandHandler("save", save_cmd, pass_args=True))
     dispatcher.add_handler(CommandHandler("delete", delete_cmd, pass_args=True))
-
-    dispatcher.add_handler(MessageHandler(None, test))
+    dispatcher.add_handler(
+        CommandHandler(["fudge", "fate", "f", "rf"], fate_cmd, pass_args=True)
+    )
 
     dispatcher.add_error_handler(error_callback)
 
